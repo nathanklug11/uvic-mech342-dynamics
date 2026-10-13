@@ -115,6 +115,15 @@
                     <button class="btn btn-sm btn-outline exam-filter-btn" data-filter="Tutorial 3" onclick="App.filterExamBank('Tutorial 3', this)">
                         📙 Tutorial 3 Bank (Curvilinear & Cones)
                     </button>
+                    <button class="btn btn-sm btn-outline exam-filter-btn" data-filter="bughunt" onclick="App.filterExamBank('bughunt', this)" style="border-color: #f59e0b; color: #fbbf24;">
+                        ⚠️ Spot-the-Exam-Trap (Bug Hunt)
+                    </button>
+                    <button class="btn btn-sm btn-outline exam-filter-btn" data-filter="rosetta" onclick="App.filterExamBank('rosetta', this)" style="border-color: #38bdf8; color: #38bdf8;">
+                        💎 Coordinate Rosetta Stone
+                    </button>
+                    <button class="btn btn-sm btn-outline exam-filter-btn" data-filter="poe" onclick="App.filterExamBank('poe', this)" style="border-color: #ec4899; color: #f472b6;">
+                        🔮 Predict-Observe-Explain
+                    </button>
                 </div>
 
                 <!-- Blueprints Section -->
@@ -209,6 +218,11 @@
                     </div>
                 </div>
 
+                <!-- Metacognitive Calibration & Exam Readiness Dashboard -->
+                <div id="calibration-dashboard-container" style="margin-bottom: 25px;">
+                    <!-- Rendered dynamically by App.renderCalibrationDashboard() -->
+                </div>
+
                 <div id="quiz-questions-list">
                     <!-- Populated dynamically by App.renderPracticeArena() -->
                 </div>
@@ -293,6 +307,7 @@
     <script src="js/three-simulations.js"></script>
     <script src="js/lectures-data.js"></script>
     <script src="js/exam-bank-data.js"></script>
+    <script src="js/pedagogy-engine.js"></script>
     <script src="js/quiz-data.js"></script>
     <script src="js/matlab-python-lab.js"></script>
     <script src="js/app.js"></script>

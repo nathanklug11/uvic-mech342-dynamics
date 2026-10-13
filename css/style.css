@@ -1204,3 +1204,370 @@ body {
     box-shadow: 0 0 5px rgba(56, 189, 248, 0.5);
 }
 
+
+/* ==========================================
+   PEDAGOGICAL ENHANCEMENTS & EVIDENCE-BASED UI
+   ========================================== */
+
+/* 1. X-Ray Formula Inspector */
+.xray-container {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.xray-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.xray-header h4 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.xray-chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.xray-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+    background: rgba(30, 41, 59, 0.8);
+    color: var(--text-color);
+    user-select: none;
+}
+
+.xray-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    border-color: currentColor;
+}
+
+.xray-chip.active {
+    transform: scale(1.04);
+    box-shadow: 0 0 15px currentColor;
+    border-color: currentColor;
+    background: rgba(15, 23, 42, 0.95);
+}
+
+.xray-detail-box {
+    background: rgba(30, 41, 59, 0.7);
+    border-left: 4px solid var(--primary);
+    border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+    padding: 16px;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+}
+
+.xray-detail-box h5 {
+    margin: 0 0 8px 0;
+    font-size: 1.05rem;
+    color: var(--uvic-yellow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.xray-detail-box p {
+    margin: 6px 0;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.xray-trap-tag {
+    display: inline-block;
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    margin-right: 6px;
+}
+
+/* 2. Predict-Observe-Explain (POE) Cards */
+.poe-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 22px;
+    margin-bottom: 24px;
+    transition: box-shadow 0.2s;
+}
+
+.poe-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.poe-badge {
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+}
+
+.poe-scenario {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px dashed rgba(148, 163, 184, 0.25);
+    border-radius: var(--border-radius-sm);
+    padding: 14px;
+    margin: 14px 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.poe-options-grid {
+    display: grid;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.poe-option-btn {
+    text-align: left;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 12px 16px;
+    color: var(--text-color);
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.poe-option-btn:hover {
+    border-color: var(--uvic-blue);
+    background: rgba(56, 189, 248, 0.1);
+}
+
+.poe-option-btn.selected-correct {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+}
+
+.poe-option-btn.selected-incorrect {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+}
+
+.poe-feedback-box {
+    margin-top: 15px;
+    padding: 14px;
+    border-radius: var(--border-radius-sm);
+    background: rgba(15, 23, 42, 0.8);
+    border-left: 4px solid var(--primary);
+    animation: fadeIn 0.3s ease;
+}
+
+/* 3. Spot-the-Exam-Trap (Bug Hunt) */
+.bughunt-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.bughunt-steps-list {
+    margin: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bughunt-step-item {
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bughunt-step-item:hover {
+    border-color: var(--uvic-yellow);
+    background: rgba(234, 179, 8, 0.08);
+}
+
+.bughunt-step-item.revealed-error {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.bughunt-step-item.revealed-ok {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.bughunt-solution {
+    background: rgba(30, 41, 59, 0.85);
+    border-radius: var(--border-radius-sm);
+    border-left: 4px solid #ef4444;
+    padding: 14px;
+    margin-top: 12px;
+}
+
+/* 4. Coordinate Rosetta Stone */
+.rosetta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 18px 0;
+}
+
+.rosetta-col {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rosetta-col-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--uvic-blue);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rosetta-vector-box {
+    background: rgba(30, 41, 59, 0.6);
+    border-radius: var(--border-radius-sm);
+    padding: 10px;
+    font-size: 0.9rem;
+}
+
+/* 5. Metacognitive Confidence Selector & Calibration */
+.confidence-selector-container {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 12px 16px;
+    margin: 12px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.conf-pills-group {
+    display: flex;
+    gap: 8px;
+}
+
+.conf-pill-btn {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: 16px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.conf-pill-btn:hover {
+    border-color: var(--primary);
+}
+
+.conf-pill-btn.active-high {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    color: #34d399;
+    font-weight: 700;
+}
+
+.conf-pill-btn.active-med {
+    background: rgba(234, 179, 8, 0.2);
+    border-color: #eab308;
+    color: #fde047;
+    font-weight: 700;
+}
+
+.conf-pill-btn.active-low {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+    color: #f87171;
+    font-weight: 700;
+}
+
+.calibration-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.calibration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.calib-stat-box {
+    background: rgba(15, 23, 42, 0.7);
+    border-radius: var(--border-radius-sm);
+    padding: 14px;
+    border-left: 4px solid var(--border-color);
+}
+
+.calib-stat-box.mastered { border-color: #10b981; }
+.calib-stat-box.blindspot { border-color: #ef4444; }
+.calib-stat-box.lucky { border-color: #eab308; }
+.calib-stat-box.gap { border-color: #94a3b8; }
+
+.calib-stat-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 4px 0;
+}
+
+.calib-stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

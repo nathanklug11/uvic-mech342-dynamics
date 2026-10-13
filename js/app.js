@@ -10,6 +10,10 @@ const App = {
     activeSimInstance: null,
     quizScore: { correct: 0, total: 0, streak: 0 },
     answeredQuestions: {},
+    userConfidence: {},
+    bugHuntState: {},
+    poeState: {},
+    rosettaTime: 1.0,
 
     init() {
         this.renderSidebarLectures();
@@ -205,7 +209,19 @@ const App = {
                 this.mountSimulation(tab.simulationId, 'embedded-canvas-container', 'embedded-controls-container');
             }, 50);
         } else {
-            bodyEl.innerHTML = tab.contentHtml;
+            let content = tab.contentHtml;
+            if (tabId === 'concept' && typeof PedagogyEngine !== 'undefined') {
+                if (this.currentLectureId === 'lec4') {
+                    content += this.renderFormulaXRay('cylindrical-accel');
+                } else if (this.currentLectureId === 'lec5') {
+                    content += this.renderFormulaXRay('frenet-accel');
+                } else if (this.currentLectureId === 'lec6') {
+                    content += this.renderFormulaXRay('transport-theorem');
+                } else if (this.currentLectureId === 'lec7') {
+                    content += this.renderFormulaXRay('euler-omega');
+                }
+            }
+            bodyEl.innerHTML = content;
         }
 
         // Typeset math
@@ -881,6 +897,7 @@ const App = {
     // PRACTICE & DIAGNOSTIC ARENA
     // -------------------------------------------------------------
     renderPracticeArena() {
+        this.renderCalibrationDashboard();
         const container = document.getElementById('quiz-questions-list');
         if (!container) return;
 
@@ -889,6 +906,20 @@ const App = {
             const isAnswered = this.answeredQuestions[q.id] !== undefined;
             const chosen = this.answeredQuestions[q.id];
             const isCorrect = isAnswered && chosen === q.correctIndex;
+            const userConf = (this.userConfidence && this.userConfidence[q.id]) || 'med';
+
+            let calibBadge = '';
+            if (isAnswered) {
+                if (userConf === 'high' && isCorrect) {
+                    calibBadge = '<div style="margin-bottom: 8px; color: #34d399; font-weight: 700; font-size: 0.85rem;">🎯 Calibrated Mastery: Confident & Accurate!</div>';
+                } else if (userConf === 'high' && !isCorrect) {
+                    calibBadge = '<div style="margin-bottom: 8px; color: #f87171; font-weight: 700; font-size: 0.85rem; background: rgba(239,68,68,0.15); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(239,68,68,0.3);">⚠️ DANGEROUS BLINDSPOT: High confidence on an incorrect answer! Study explanation below!</div>';
+                } else if (userConf === 'low' && isCorrect) {
+                    calibBadge = '<div style="margin-bottom: 8px; color: #fde047; font-weight: 700; font-size: 0.85rem;">🎲 Lucky Guess: Correct, but low certainty recorded. Reinforce schema below!</div>';
+                } else {
+                    calibBadge = '<div style="margin-bottom: 8px; color: #94a3b8; font-weight: 700; font-size: 0.85rem;">💡 Knowledge Gap: Study the derivation and Ginsberg section!</div>';
+                }
+            }
 
             html += `
                 <div class="question-card" id="q-card-${q.id}">
@@ -899,6 +930,29 @@ const App = {
                     </div>
                     <div class="q-body">
                         <p class="q-text">${q.question}</p>
+
+                        ${!isAnswered ? `
+                            <div class="confidence-selector-container">
+                                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">
+                                    Certainty before answering:
+                                </span>
+                                <div class="conf-pills-group">
+                                    <button class="conf-pill-btn ${userConf === 'high' ? 'active-high' : ''}" 
+                                            data-conf="high" onclick="App.setConfidence('${q.id}', 'high')">
+                                        🟢 Certain (Know Cold)
+                                    </button>
+                                    <button class="conf-pill-btn ${userConf === 'med' ? 'active-med' : ''}" 
+                                            data-conf="med" onclick="App.setConfidence('${q.id}', 'med')">
+                                        🟡 Moderate Reasoning
+                                    </button>
+                                    <button class="conf-pill-btn ${userConf === 'low' ? 'active-low' : ''}" 
+                                            data-conf="low" onclick="App.setConfidence('${q.id}', 'low')">
+                                        🔴 Guessing / Low
+                                    </button>
+                                </div>
+                            </div>
+                        ` : ''}
+
                         <div class="options-list">
                             ${q.options.map((opt, optIdx) => {
                                 let optClass = '';
@@ -922,6 +976,7 @@ const App = {
                         </div>
                         ${isAnswered ? `
                             <div class="explanation-box ${isCorrect ? 'success' : 'fail'}">
+                                ${calibBadge}
                                 <strong>${isCorrect ? '🎉 Correct!' : '❌ Incorrect'}</strong>
                                 <p>${q.explanation}</p>
                             </div>
@@ -949,6 +1004,11 @@ const App = {
 
         this.answeredQuestions[qId] = optionIdx;
         const isCorrect = optionIdx === q.correctIndex;
+        const userConf = (this.userConfidence && this.userConfidence[qId]) || 'med';
+
+        if (typeof PedagogyEngine !== 'undefined') {
+            PedagogyEngine.recordResponse(userConf, isCorrect);
+        }
 
         this.quizScore.total++;
         if (isCorrect) {
@@ -1081,6 +1141,33 @@ const App = {
             } else {
                 bpContainer.style.display = 'none';
             }
+        }
+
+        // Special Pedagogical Filters: Bug Hunt, Rosetta Stone, POE
+        if (activeFilter === 'bughunt') {
+            probContainer.innerHTML = this.renderBugHuntView();
+            if (window.renderMathInElement) {
+                renderMathInElement(probContainer, {
+                    delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }]
+                });
+            }
+            return;
+        } else if (activeFilter === 'rosetta') {
+            probContainer.innerHTML = this.renderRosettaStoneView();
+            if (window.renderMathInElement) {
+                renderMathInElement(probContainer, {
+                    delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }]
+                });
+            }
+            return;
+        } else if (activeFilter === 'poe') {
+            probContainer.innerHTML = this.renderPOEView();
+            if (window.renderMathInElement) {
+                renderMathInElement(probContainer, {
+                    delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }]
+                });
+            }
+            return;
         }
 
         // Filter and Render Problems
@@ -1420,7 +1507,459 @@ const App = {
             `;
         });
         container.innerHTML = html || '<div style="padding:15px; color:var(--text-muted);">No matching lectures found.</div>';
-    }
+    },
+
+    // ==========================================
+    // PEDAGOGICAL METHODS & INTERACTIVE TOOLS
+    // ==========================================
+
+    renderCalibrationDashboard() {
+        const container = document.getElementById('calibration-dashboard-container');
+        if (!container || typeof PedagogyEngine === 'undefined') return;
+
+        const tr = PedagogyEngine.trackRecord;
+        const readinessScore = PedagogyEngine.getExamReadinessScore();
+
+        let scoreColor = '#ef4444';
+        let statusText = 'Initiating Diagnostic Baseline';
+        if (readinessScore >= 80) { scoreColor = '#10b981'; statusText = '🚀 High Exam Readiness (Calibrated Mastery)'; }
+        else if (readinessScore >= 50) { scoreColor = '#38bdf8'; statusText = '📈 Progressing (Solid Reasoning, Target Gaps)'; }
+        else if (tr.totalAnswered > 0) { scoreColor = '#eab308'; statusText = '⚠️ Attention Needed: Address Blindspots & Traps'; }
+
+        let blindspotAlert = '';
+        if (tr.highConfIncorrect > 0) {
+            blindspotAlert = `
+                <div style="margin-top: 14px; padding: 12px 16px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; color: #f87171; font-size: 0.9rem; display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.4rem;">⚠️</span>
+                    <div>
+                        <strong>Exam Risk Alert:</strong> You have <strong>${tr.highConfIncorrect} Dangerous Blindspot(s)</strong> (questions answered incorrectly with high confidence).
+                        On exams, uncalibrated certainty costs letter grades. Review the worked explanations below!
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = `
+            <div class="calibration-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+                    <div>
+                        <h3 style="margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px;">
+                            📊 Metacognitive Exam Readiness Dashboard
+                        </h3>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+                            Cognitive Calibration (Bjork & Roediger): Distinguishes calibrated mastery from dangerous blindspots and lucky guesses.
+                        </p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.8rem; font-weight: 800; color: ${scoreColor};">${readinessScore}%</div>
+                        <div style="font-size: 0.8rem; color: ${scoreColor}; font-weight: 600;">${statusText}</div>
+                    </div>
+                </div>
+
+                <div class="calibration-grid">
+                    <div class="calib-stat-box mastered">
+                        <div class="calib-stat-label">🎯 Calibrated Mastery</div>
+                        <div class="calib-stat-num" style="color: #34d399;">${tr.highConfCorrect}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">High Conf + Correct</div>
+                    </div>
+                    <div class="calib-stat-box blindspot">
+                        <div class="calib-stat-label">⚠️ Dangerous Blindspots</div>
+                        <div class="calib-stat-num" style="color: #f87171;">${tr.highConfIncorrect}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">High Conf + Incorrect</div>
+                    </div>
+                    <div class="calib-stat-box lucky">
+                        <div class="calib-stat-label">🎲 Lucky Guesses</div>
+                        <div class="calib-stat-num" style="color: #fde047;">${tr.lowConfCorrect}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Low Conf + Correct</div>
+                    </div>
+                    <div class="calib-stat-box gap">
+                        <div class="calib-stat-label">💡 Knowledge Gaps</div>
+                        <div class="calib-stat-num" style="color: #94a3b8;">${tr.lowConfIncorrect + tr.medConfIncorrect}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Needs Study Focus</div>
+                    </div>
+                </div>
+
+                ${blindspotAlert}
+            </div>
+        `;
+    },
+
+    setConfidence(qId, conf) {
+        if (!this.userConfidence) this.userConfidence = {};
+        this.userConfidence[qId] = conf;
+        const card = document.getElementById(`q-card-${qId}`);
+        if (card) {
+            card.querySelectorAll('.conf-pill-btn').forEach(btn => {
+                btn.className = 'conf-pill-btn';
+                if (btn.getAttribute('data-conf') === conf) {
+                    btn.classList.add(`active-${conf}`);
+                }
+            });
+        }
+    },
+
+    // --- FORMULA X-RAY INSPECTOR ---
+    renderFormulaXRay(formulaKey) {
+        if (typeof PedagogyEngine === 'undefined') return '';
+        const data = PedagogyEngine.formulaXRayBank[formulaKey];
+        if (!data) return '';
+
+        return `
+            <div class="xray-container" id="xray-${formulaKey}">
+                <div class="xray-header">
+                    <h4>🔬 Term-by-Term X-Ray Inspector</h4>
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">Cognitive Load Reducer</span>
+                </div>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0 0 10px 0;">
+                    Click any component term below to inspect its physical mechanism, common exam trap, and limit behavior:
+                </p>
+                <div style="font-size: 1.25rem; text-align: center; margin: 15px 0; padding: 12px; background: rgba(30, 41, 59, 0.7); border-radius: 8px;">
+                    $$${data.latexMaster}$$
+                </div>
+                <div class="xray-chips-row">
+                    ${data.terms.map((t, idx) => `
+                        <button class="xray-chip ${idx === 0 ? 'active' : ''}" 
+                                style="color: ${t.color};"
+                                data-term-id="${t.id}"
+                                onclick="App.selectXRayTerm('${formulaKey}', '${t.id}', this)">
+                            $${t.symbol}$ · ${t.name}
+                        </button>
+                    `).join('')}
+                </div>
+                <div class="xray-detail-box" id="xray-detail-${formulaKey}">
+                    ${this.renderXRayDetailContent(data.terms[0])}
+                </div>
+            </div>
+        `;
+    },
+
+    selectXRayTerm(formulaKey, termId, btn) {
+        if (typeof PedagogyEngine === 'undefined') return;
+        const data = PedagogyEngine.formulaXRayBank[formulaKey];
+        if (!data) return;
+        const term = data.terms.find(t => t.id === termId);
+        if (!term) return;
+
+        const container = document.getElementById(`xray-${formulaKey}`);
+        if (container) {
+            container.querySelectorAll('.xray-chip').forEach(b => b.classList.remove('active'));
+        }
+        if (btn) btn.classList.add('active');
+
+        const detailBox = document.getElementById(`xray-detail-${formulaKey}`);
+        if (detailBox) {
+            detailBox.style.borderLeftColor = term.color;
+            detailBox.innerHTML = this.renderXRayDetailContent(term);
+            if (window.renderMathInElement) {
+                renderMathInElement(detailBox, {
+                    delimiters: [
+                        { left: "$$", right: "$$", display: true },
+                        { left: "$", right: "$", display: false }
+                    ]
+                });
+            }
+        }
+    },
+
+    renderXRayDetailContent(term) {
+        return `
+            <h5 style="color: ${term.color};">📌 ${term.name} ($${term.symbol}$)</h5>
+            <p><strong>Physical Intuition:</strong> ${term.meaning}</p>
+            <p><span class="xray-trap-tag">⚠️ EXAM TRAP</span> ${term.examTrap}</p>
+            <p><strong>Limit Case Check:</strong> ${term.limitCase}</p>
+        `;
+    },
+
+    // --- BUG HUNT (ERRONEOUS EXAMPLES) ---
+    renderBugHuntView() {
+        if (typeof PedagogyEngine === 'undefined') return '';
+        let html = `
+            <div class="concept-card" style="border-left: 4px solid #f59e0b; margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h3 style="color: #fbbf24; margin: 0 0 6px 0;">⚠️ Spot-the-Exam-Trap (Bug Hunt Arena)</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+                            Research (Große & Renkl) proves that diagnosing <em>erroneous examples</em> builds the deepest conceptual retention.
+                            Each problem below contains a realistic student solution with <strong>exactly one fatal exam flaw</strong>.
+                            Click on the line where the student made an illegal mathematical or kinematic move!
+                        </p>
+                    </div>
+                    <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">5 Core Traps</span>
+                </div>
+            </div>
+        `;
+
+        PedagogyEngine.bugHuntChallenges.forEach((bug, bIdx) => {
+            const userState = (this.bugHuntState && this.bugHuntState[bug.id]) || {};
+            html += `
+                <div class="bughunt-card" id="bughunt-${bug.id}">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <div>
+                            <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">Trap #${bIdx + 1}</span>
+                            <h4 style="margin: 6px 0;">${bug.title}</h4>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.95rem; line-height: 1.5; color: var(--text-secondary);">${bug.problemStatement}</p>
+                    
+                    <h5 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; margin: 15px 0 6px 0;">
+                        Student Solution (Click the flawed step):
+                    </h5>
+                    <div class="bughunt-steps-list">
+                        ${bug.studentSolution.map(step => {
+                            const isRevealed = userState[step.stepNum] !== undefined;
+                            let stepClass = '';
+                            let icon = '❓';
+                            if (isRevealed) {
+                                if (step.isError) {
+                                    stepClass = 'revealed-error';
+                                    icon = '❌ BUSTED!';
+                                } else {
+                                    stepClass = 'revealed-ok';
+                                    icon = '✅ Valid Step';
+                                }
+                            }
+                            return `
+                                <div class="bughunt-step-item ${stepClass}" onclick="App.checkBugStep('${bug.id}', ${step.stepNum}, ${step.isError})">
+                                    <span><strong>Step ${step.stepNum}:</strong> ${step.text}</span>
+                                    <span style="font-size: 0.85rem; font-weight: 700;">${icon}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+
+                    ${userState.foundError ? `
+                        <div class="bughunt-solution">
+                            <h5 style="color: #ef4444; margin: 0 0 6px 0;">🚨 Why this step is illegal:</h5>
+                            <p style="margin: 0 0 8px 0; font-size: 0.92rem; line-height: 1.5;">${bug.studentSolution.find(s => s.isError).correction}</p>
+                            <div style="padding: 8px 12px; background: rgba(15, 23, 42, 0.8); border-radius: 4px; font-size: 0.85rem; color: #38bdf8;">
+                                💡 <strong>Exam Rule of Thumb:</strong> ${bug.takeaway}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+        return html;
+    },
+
+    checkBugStep(bugId, stepNum, isError) {
+        if (!this.bugHuntState) this.bugHuntState = {};
+        if (!this.bugHuntState[bugId]) this.bugHuntState[bugId] = {};
+        this.bugHuntState[bugId][stepNum] = true;
+        if (isError) {
+            this.bugHuntState[bugId].foundError = true;
+        }
+        this.renderExamBank('bughunt');
+    },
+
+    // --- COORDINATE ROSETTA STONE ---
+    renderRosettaStoneView() {
+        if (typeof PedagogyEngine === 'undefined') return '';
+        const t = this.rosettaTime || 1.0;
+        const data = PedagogyEngine.computeRosettaStone(t);
+
+        return `
+            <div class="concept-card" style="border-left: 4px solid #38bdf8; margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h3 style="color: #38bdf8; margin: 0 0 6px 0;">💎 The Coordinate Rosetta Stone</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+                            Vectors are physical arrows in space. <strong>Their magnitude and direction never change</strong> when you switch coordinates—only their algebraic components change!
+                            Below, the exact same conical spiral particle trajectory (from Assignment 1 Q2) is evaluated simultaneously across all 4 frameworks.
+                        </p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.8); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color);">
+                        <label style="font-size: 0.85rem; font-weight: 600;">Time scrub: <strong>t = <span id="rosetta-time-val">${t.toFixed(1)}</span> s</strong></label>
+                        <input type="range" id="rosetta-time-slider" min="0.5" max="4.0" step="0.1" value="${t}" 
+                               oninput="App.updateRosettaTime(this.value)" style="width: 120px;">
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; padding: 12px 16px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; text-align: center;">
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Physical Speed |v| (Invariant)</span>
+                        <div style="font-size: 1.3rem; font-weight: 800; color: #34d399;">${data.physicalInvariants.speed.toFixed(3)} m/s</div>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Physical Accel |a| (Invariant)</span>
+                        <div style="font-size: 1.3rem; font-weight: 800; color: #34d399;">${data.physicalInvariants.accelMag.toFixed(3)} m/s²</div>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Radius of Curvature ρ (Invariant)</span>
+                        <div style="font-size: 1.3rem; font-weight: 800; color: #38bdf8;">${data.physicalInvariants.radiusCurvature.toFixed(3)} m</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rosetta-grid">
+                <!-- 1. Cartesian -->
+                <div class="rosetta-col">
+                    <div class="rosetta-col-title">
+                        <span>🌐 Cartesian ($XYZ$)</span>
+                        <span class="badge" style="font-size: 0.7rem;">Fixed Triad</span>
+                    </div>
+                    <div class="rosetta-vector-box">
+                        <strong>Velocity Vector $\\vec{v}$:</strong>
+                        <div style="margin-top: 4px; color: #38bdf8;">$$${data.cartesian.exprV}$$</div>
+                    </div>
+                    <div class="rosetta-vector-box">
+                        <strong>Acceleration Vector $\\vec{a}$:</strong>
+                        <div style="margin-top: 4px; color: #34d399;">$$${data.cartesian.exprA}$$</div>
+                    </div>
+                    <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;">
+                        <em>Pros & Cons:</em> Unit vectors $\\vec{I},\\vec{J},\\vec{K}$ never rotate, but expressions are loaded with heavy $\\sin\\theta$ and $\\cos\\theta$ terms.
+                    </p>
+                </div>
+
+                <!-- 2. Cylindrical -->
+                <div class="rosetta-col">
+                    <div class="rosetta-col-title">
+                        <span>🔄 Cylindrical ($R,\\theta,z$)</span>
+                        <span class="badge" style="font-size: 0.7rem;">Moving Triad</span>
+                    </div>
+                    <div class="rosetta-vector-box">
+                        <strong>Velocity Vector $\\vec{v}$:</strong>
+                        <div style="margin-top: 4px; color: #38bdf8;">$$${data.cylindrical.exprV}$$</div>
+                    </div>
+                    <div class="rosetta-vector-box">
+                        <strong>Acceleration Vector $\\vec{a}$:</strong>
+                        <div style="margin-top: 4px; color: #34d399;">$$${data.cylindrical.exprA}$$</div>
+                    </div>
+                    <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;">
+                        <em>Pros & Cons:</em> Optimal for axisymmetric bodies, rotating rods, and conical surfaces. Isolates Coriolis and centripetal terms cleanly!
+                    </p>
+                </div>
+
+                <!-- 3. Spherical -->
+                <div class="rosetta-col">
+                    <div class="rosetta-col-title">
+                        <span>🌐 Spherical ($r,\\phi,\\theta$)</span>
+                        <span class="badge" style="font-size: 0.7rem;">Cone Angle $\\phi$</span>
+                    </div>
+                    <div class="rosetta-vector-box">
+                        <strong>Velocity Vector $\\vec{v}$:</strong>
+                        <div style="margin-top: 4px; color: #38bdf8;">$$${data.spherical.exprV}$$</div>
+                    </div>
+                    <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;">
+                        <em>Pros & Cons:</em> Because the motion stays on a cone with constant half-angle $\\phi = 30^\circ$, $v_\\phi \\equiv 0$! Eliminates one full velocity coordinate.
+                    </p>
+                </div>
+
+                <!-- 4. Frenet-Serret -->
+                <div class="rosetta-col">
+                    <div class="rosetta-col-title">
+                        <span>🛤️ Frenet-Serret ($t,n,b$)</span>
+                        <span class="badge" style="font-size: 0.7rem;">Intrinsic Triad</span>
+                    </div>
+                    <div class="rosetta-vector-box">
+                        <strong>Velocity Vector $\\vec{v}$:</strong>
+                        <div style="margin-top: 4px; color: #38bdf8;">$$${data.frenet.exprV}$$</div>
+                    </div>
+                    <div class="rosetta-vector-box">
+                        <strong>Acceleration Vector $\\vec{a}$:</strong>
+                        <div style="margin-top: 4px; color: #34d399;">$$${data.frenet.exprA}$$</div>
+                    </div>
+                    <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0;">
+                        <em>Pros & Cons:</em> Velocity has only ONE component ($v\\vec{e}_t$)! Binormal acceleration is identically ZERO ($a_b = 0$). Perfect when curve geometry or normal reaction force is given.
+                    </p>
+                </div>
+            </div>
+        `;
+    },
+
+    updateRosettaTime(val) {
+        this.rosettaTime = parseFloat(val);
+        const el = document.getElementById('rosetta-time-val');
+        if (el) el.textContent = this.rosettaTime.toFixed(1);
+        this.renderExamBank('rosetta');
+    },
+
+    // --- PREDICT-OBSERVE-EXPLAIN (POE) ---
+    renderPOEView() {
+        if (typeof PedagogyEngine === 'undefined') return '';
+        let html = `
+            <div class="concept-card" style="border-left: 4px solid #ec4899; margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h3 style="color: #f472b6; margin: 0 0 6px 0;">🔮 Predict-Observe-Explain (POE) Inquiry Arena</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+                            Cognitive research shows that <em>predicting</em> an outcome before observing an experiment shatters intuitive misconceptions and builds robust mental schemas.
+                        </p>
+                    </div>
+                    <span class="badge" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;">5 POE Cycles</span>
+                </div>
+            </div>
+        `;
+
+        PedagogyEngine.poeChallenges.forEach((poe, pIdx) => {
+            const userPred = (this.poeState && this.poeState[poe.id]) || null;
+            html += `
+                <div class="poe-card" id="poe-${poe.id}">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <div>
+                            <span class="poe-badge">Phase 1: Predict</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 8px;">${poe.topic}</span>
+                            <h4 style="margin: 6px 0;">${poe.title}</h4>
+                        </div>
+                    </div>
+
+                    <div class="poe-scenario">${poe.scenario}</div>
+                    <p style="font-weight: 600; font-size: 0.95rem; margin-bottom: 10px;">${poe.question}</p>
+
+                    <div class="poe-options-grid">
+                        ${poe.predictionOptions.map(opt => {
+                            let optClass = '';
+                            if (userPred) {
+                                if (opt.id === userPred) {
+                                    optClass = opt.correct ? 'selected-correct' : 'selected-incorrect';
+                                }
+                            }
+                            return `
+                                <button class="poe-option-btn ${optClass}" 
+                                        onclick="App.submitPOEPrediction('${poe.id}', '${opt.id}')"
+                                        ${userPred ? 'disabled' : ''}>
+                                    <span>${opt.correct && userPred ? '🎯' : (!opt.correct && userPred === opt.id ? '❌' : '🔘')}</span>
+                                    <span>${opt.text}</span>
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+
+                    ${userPred ? `
+                        <div class="poe-feedback-box">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 8px;">
+                                <span class="poe-badge" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">Phase 2: Observe in 3D</span>
+                                <button class="btn btn-sm btn-primary" onclick="App.openPOELab('${poe.simId}')">
+                                    🚀 Launch Lab Simulation
+                                </button>
+                            </div>
+                            <p style="font-size: 0.92rem; margin: 6px 0; color: #38bdf8;">
+                                <strong>Observation Objective:</strong> ${poe.observationGoal}
+                            </p>
+                            <hr style="margin: 12px 0; border: 0; border-top: 1px solid var(--border-color);">
+                            <span class="poe-badge" style="background: linear-gradient(135deg, #10b981, #059669);">Phase 3: Explain & Reconcile</span>
+                            <p style="font-size: 0.92rem; line-height: 1.6; margin: 8px 0 0 0;">
+                                ${poe.explanation}
+                            </p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+        return html;
+    },
+
+    submitPOEPrediction(poeId, optionId) {
+        if (!this.poeState) this.poeState = {};
+        this.poeState[poeId] = optionId;
+        this.renderExamBank('poe');
+    },
+
+    openPOELab(simId) {
+        this.switchMode('labs');
+        this.initStandaloneLab(simId);
+    },
+
 };
 
 window.addEventListener('DOMContentLoaded', () => {
