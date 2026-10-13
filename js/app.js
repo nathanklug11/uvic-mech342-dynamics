@@ -18,6 +18,7 @@ const App = {
         this.renderFormulaVault();
         this.renderCodeLab();
         this.renderPracticeArena();
+        this.renderExamBank();
 
         // Check if there are user-stored custom lectures
         this.loadCustomLectures();
@@ -85,6 +86,8 @@ const App = {
             this.selectLecture(this.currentLectureId);
         } else if (mode === 'labs') {
             this.initStandaloneLab('sim-lec0');
+        } else if (mode === 'exams') {
+            this.renderExamBank();
         }
 
         // Trigger math typesetting
@@ -537,6 +540,257 @@ const App = {
                     sim.setAngles(undefined, undefined, e.target.value);
                 };
             }
+        } else if (simId === 'sim-lec4') {
+            const sim = Simulations.initSimLec4(canvasContainerId);
+            this.activeSimInstance = sim;
+            if (controlsEl && sim) {
+                controlsEl.innerHTML = `
+                    <div class="ctrl-group">
+                        <div class="axis-btn-group" style="margin-bottom: 10px;">
+                            <button id="lec4-btn-cyl" class="btn btn-sm btn-primary active">Cylindrical (R, &theta;, z)</button>
+                            <button id="lec4-btn-sph" class="btn btn-sm btn-outline">Spherical (r, &phi;, &theta;)</button>
+                        </div>
+                        <button id="lec4-reset-btn" class="btn btn-outline">↺ Reset Coordinates</button>
+                    </div>
+                    <div id="lec4-cyl-controls">
+                        <div class="ctrl-group">
+                            <label>Radius R: <span id="val-lec4-R">2.5</span> m</label>
+                            <input id="slider-lec4-R" type="range" min="0.5" max="5.0" step="0.1" value="2.5">
+                        </div>
+                        <div class="ctrl-group">
+                            <label>Azimuth &theta;: <span id="val-lec4-th">45</span>&deg;</label>
+                            <input id="slider-lec4-th" type="range" min="0" max="360" step="1" value="45">
+                        </div>
+                        <div class="ctrl-group">
+                            <label>Height z: <span id="val-lec4-z">1.5</span> m</label>
+                            <input id="slider-lec4-z" type="range" min="-3.0" max="3.0" step="0.1" value="1.5">
+                        </div>
+                        <div class="ctrl-group">
+                            <label>Radial Speed R_dot: <span id="val-lec4-dotR">0.5</span> m/s</label>
+                            <input id="slider-lec4-dotR" type="range" min="-2.0" max="2.0" step="0.1" value="0.5">
+                        </div>
+                        <div class="ctrl-group">
+                            <label>Spin Rate &theta;_dot: <span id="val-lec4-dotTh">1.2</span> rad/s</label>
+                            <input id="slider-lec4-dotTh" type="range" min="-4.0" max="4.0" step="0.1" value="1.2">
+                        </div>
+                    </div>
+                    <div id="lec4-sph-controls" style="display: none;">
+                        <div class="ctrl-group">
+                            <label>Radius r: <span id="val-lec4-r">3.0</span> m</label>
+                            <input id="slider-lec4-r" type="range" min="1.0" max="5.0" step="0.1" value="3.0">
+                        </div>
+                        <div class="ctrl-group">
+                            <label>Colatitude &phi; (from Z): <span id="val-lec4-phi">60</span>&deg;</label>
+                            <input id="slider-lec4-phi" type="range" min="1" max="179" step="1" value="60">
+                        </div>
+                        <div class="ctrl-group">
+                            <label>Azimuth &theta;: <span id="val-lec4-th-sph">45</span>&deg;</label>
+                            <input id="slider-lec4-th-sph" type="range" min="0" max="360" step="1" value="45">
+                        </div>
+                    </div>
+                    <div id="lec4-readout-card" style="margin-top: 15px;"></div>
+                `;
+
+                const btnCyl = document.getElementById('lec4-btn-cyl');
+                const btnSph = document.getElementById('lec4-btn-sph');
+                const cylCtrls = document.getElementById('lec4-cyl-controls');
+                const sphCtrls = document.getElementById('lec4-sph-controls');
+
+                btnCyl.onclick = () => {
+                    btnCyl.classList.add('active', 'btn-primary');
+                    btnCyl.classList.remove('btn-outline');
+                    btnSph.classList.remove('active', 'btn-primary');
+                    btnSph.classList.add('btn-outline');
+                    cylCtrls.style.display = 'block';
+                    sphCtrls.style.display = 'none';
+                    sim.setSystem('cylindrical');
+                };
+
+                btnSph.onclick = () => {
+                    btnSph.classList.add('active', 'btn-primary');
+                    btnSph.classList.remove('btn-outline');
+                    btnCyl.classList.remove('active', 'btn-primary');
+                    btnCyl.classList.add('btn-outline');
+                    cylCtrls.style.display = 'none';
+                    sphCtrls.style.display = 'block';
+                    sim.setSystem('spherical');
+                };
+
+                document.getElementById('lec4-reset-btn').onclick = () => sim.reset();
+
+                document.getElementById('slider-lec4-R').oninput = (e) => {
+                    document.getElementById('val-lec4-R').textContent = e.target.value;
+                    sim.setParams({ R: parseFloat(e.target.value) });
+                };
+                document.getElementById('slider-lec4-th').oninput = (e) => {
+                    document.getElementById('val-lec4-th').textContent = e.target.value;
+                    sim.setParams({ thetaDeg: parseFloat(e.target.value) });
+                };
+                document.getElementById('slider-lec4-z').oninput = (e) => {
+                    document.getElementById('val-lec4-z').textContent = e.target.value;
+                    sim.setParams({ z: parseFloat(e.target.value) });
+                };
+                document.getElementById('slider-lec4-dotR').oninput = (e) => {
+                    document.getElementById('val-lec4-dotR').textContent = e.target.value;
+                    sim.setParams({ dotR: parseFloat(e.target.value) });
+                };
+                document.getElementById('slider-lec4-dotTh').oninput = (e) => {
+                    document.getElementById('val-lec4-dotTh').textContent = e.target.value;
+                    sim.setParams({ dotTh: parseFloat(e.target.value) });
+                };
+                document.getElementById('slider-lec4-r').oninput = (e) => {
+                    document.getElementById('val-lec4-r').textContent = e.target.value;
+                    sim.setParams({ r: parseFloat(e.target.value) });
+                };
+                document.getElementById('slider-lec4-phi').oninput = (e) => {
+                    document.getElementById('val-lec4-phi').textContent = e.target.value;
+                    sim.setParams({ phiDeg: parseFloat(e.target.value) });
+                };
+                document.getElementById('slider-lec4-th-sph').oninput = (e) => {
+                    document.getElementById('val-lec4-th-sph').textContent = e.target.value;
+                    sim.setParams({ thetaDeg: parseFloat(e.target.value) });
+                };
+            }
+        } else if (simId === 'sim-lec5') {
+            const sim = Simulations.initSimLec5(canvasContainerId);
+            this.activeSimInstance = sim;
+            if (controlsEl && sim) {
+                controlsEl.innerHTML = `
+                    <div class="ctrl-group">
+                        <button id="lec5-toggle-btn" class="btn btn-primary">⏸ Pause Track Motion</button>
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Speed v = s_dot: <span id="val-lec5-speed">2.0</span> m/s</label>
+                        <input id="slider-lec5-speed" type="range" min="0.2" max="6.0" step="0.1" value="2.0">
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Tangential Accel a_t = v_dot: <span id="val-lec5-dotSpeed">0.5</span> m/s&sup2;</label>
+                        <input id="slider-lec5-dotSpeed" type="range" min="-3.0" max="3.0" step="0.1" value="0.5">
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Scrub Track Position (s):</label>
+                        <input id="slider-lec5-prog" type="range" min="0" max="1" step="0.005" value="0.25">
+                    </div>
+                    <div id="lec5-readout-card" style="margin-top: 15px;"></div>
+                `;
+
+                let isPlaying = true;
+                const toggleBtn = document.getElementById('lec5-toggle-btn');
+                toggleBtn.onclick = () => {
+                    isPlaying = !isPlaying;
+                    toggleBtn.innerHTML = isPlaying ? '⏸ Pause Track Motion' : '▶ Play Track Motion';
+                    sim.toggleAnimation();
+                };
+
+                document.getElementById('slider-lec5-speed').oninput = (e) => {
+                    document.getElementById('val-lec5-speed').textContent = e.target.value;
+                    sim.setSpeed(e.target.value);
+                };
+                document.getElementById('slider-lec5-dotSpeed').oninput = (e) => {
+                    document.getElementById('val-lec5-dotSpeed').textContent = e.target.value;
+                    sim.setDotSpeed(e.target.value);
+                };
+                document.getElementById('slider-lec5-prog').oninput = (e) => {
+                    sim.setProgress(e.target.value);
+                };
+            }
+        } else if (simId === 'sim-lec6') {
+            const sim = Simulations.initSimLec6(canvasContainerId);
+            this.activeSimInstance = sim;
+            if (controlsEl && sim) {
+                controlsEl.innerHTML = `
+                    <div class="ctrl-group">
+                        <button id="lec6-toggle-btn" class="btn btn-primary">⏸ Pause Turntable Spin</button>
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Frame Angular Rate &omega;_Z: <span id="val-lec6-w">1.5</span> rad/s</label>
+                        <input id="slider-lec6-w" type="range" min="-5.0" max="5.0" step="0.1" value="1.5">
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Vector Length |A|: <span id="val-lec6-len">2.2</span> m</label>
+                        <input id="slider-lec6-len" type="range" min="0.5" max="4.0" step="0.1" value="2.2">
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Relative Growth Rate (dA/dt)_xyz: <span id="val-lec6-rate">0.8</span> m/s</label>
+                        <input id="slider-lec6-rate" type="range" min="0.0" max="3.0" step="0.1" value="0.8">
+                    </div>
+                    <div id="lec6-readout-card" style="margin-top: 15px;"></div>
+                `;
+
+                let isSpinning = true;
+                const toggleBtn = document.getElementById('lec6-toggle-btn');
+                toggleBtn.onclick = () => {
+                    isSpinning = !isSpinning;
+                    toggleBtn.innerHTML = isSpinning ? '⏸ Pause Turntable Spin' : '▶ Play Turntable Spin';
+                    sim.toggleRotation();
+                };
+
+                document.getElementById('slider-lec6-w').oninput = (e) => {
+                    document.getElementById('val-lec6-w').textContent = e.target.value;
+                    sim.setOmega(e.target.value);
+                };
+                document.getElementById('slider-lec6-len').oninput = (e) => {
+                    document.getElementById('val-lec6-len').textContent = e.target.value;
+                    sim.setLengthA(e.target.value);
+                };
+                document.getElementById('slider-lec6-rate').oninput = (e) => {
+                    document.getElementById('val-lec6-rate').textContent = e.target.value;
+                    sim.setRateA(e.target.value);
+                };
+            }
+        } else if (simId === 'sim-lec7') {
+            const sim = Simulations.initSimLec7(canvasContainerId);
+            this.activeSimInstance = sim;
+            if (controlsEl && sim) {
+                controlsEl.innerHTML = `
+                    <div class="ctrl-group">
+                        <button id="lec7-lock-btn" class="btn btn-primary" style="background-color: var(--danger);">⚠️ Snap to Gimbal Lock (&theta; = 0&deg;)</button>
+                        <button id="lec7-reset-btn" class="btn btn-outline">↺ Reset Angles</button>
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Outer Ring: Precession &psi; (about Z): <span id="val-lec7-psi">30</span>&deg;</label>
+                        <input id="slider-lec7-psi" type="range" min="0" max="360" step="1" value="30">
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Middle Ring: Nutation &theta; (about y'): <span id="val-lec7-th">45</span>&deg;</label>
+                        <input id="slider-lec7-th" type="range" min="0" max="180" step="1" value="45">
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Inner Rotor: Spin &phi; (about z''): <span id="val-lec7-phi">60</span>&deg;</label>
+                        <input id="slider-lec7-phi" type="range" min="0" max="360" step="1" value="60">
+                    </div>
+                    <div id="lec7-readout-card" style="margin-top: 15px;"></div>
+                `;
+
+                document.getElementById('lec7-lock-btn').onclick = () => {
+                    sim.triggerGimbalLock();
+                    document.getElementById('val-lec7-th').textContent = '0';
+                    document.getElementById('slider-lec7-th').value = '0';
+                };
+
+                document.getElementById('lec7-reset-btn').onclick = () => {
+                    sim.reset();
+                    document.getElementById('val-lec7-psi').textContent = '30';
+                    document.getElementById('slider-lec7-psi').value = '30';
+                    document.getElementById('val-lec7-th').textContent = '45';
+                    document.getElementById('slider-lec7-th').value = '45';
+                    document.getElementById('val-lec7-phi').textContent = '60';
+                    document.getElementById('slider-lec7-phi').value = '60';
+                };
+
+                document.getElementById('slider-lec7-psi').oninput = (e) => {
+                    document.getElementById('val-lec7-psi').textContent = e.target.value;
+                    sim.setAngles(e.target.value, undefined, undefined);
+                };
+                document.getElementById('slider-lec7-th').oninput = (e) => {
+                    document.getElementById('val-lec7-th').textContent = e.target.value;
+                    sim.setAngles(undefined, e.target.value, undefined);
+                };
+                document.getElementById('slider-lec7-phi').oninput = (e) => {
+                    document.getElementById('val-lec7-phi').textContent = e.target.value;
+                    sim.setAngles(undefined, undefined, e.target.value);
+                };
+            }
         }
     },
 
@@ -705,6 +959,7 @@ const App = {
         }
 
         this.renderPracticeArena();
+        this.renderExamBank();
     },
 
     toggleHint(qId) {
@@ -789,6 +1044,223 @@ const App = {
     // -------------------------------------------------------------
     // FORMULA VAULT & CHEATSHEET
     // -------------------------------------------------------------
+    
+    // -------------------------------------------------------------
+    // EXAM & TUTORIAL PROBLEM-SOLVING HUB
+    // -------------------------------------------------------------
+    renderExamBank(activeFilter = 'all') {
+        const bpContainer = document.getElementById('exam-blueprints-container');
+        const probContainer = document.getElementById('exam-problems-container');
+        if (!probContainer || typeof MECH342_EXAM_BANK === 'undefined') return;
+
+        // Render Blueprints
+        if (bpContainer) {
+            if (activeFilter === 'all' || activeFilter === 'blueprints') {
+                bpContainer.style.display = 'block';
+                let bpHtml = `
+                    <div class="concept-card" style="border-left: 4px solid var(--primary); margin-bottom: 25px;">
+                        <h3>📐 MECH 342 Test-Solving Blueprints</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">
+                            Proven 5-step recipes used by top dynamics students to systematically solve exam and homework problems without getting lost in trigonometry.
+                        </p>
+                        <div class="roadmap-grid" style="margin-top: 15px;">
+                `;
+                MECH342_EXAM_BANK.blueprints.forEach(bp => {
+                    bpHtml += `
+                        <div class="roadmap-box kinematics" style="margin-bottom: 12px;">
+                            <span class="badge" style="font-size: 0.75rem;">${bp.targetTopic}</span>
+                            <h4 style="margin: 6px 0 10px 0;">${bp.title}</h4>
+                            <ol style="padding-left: 18px; margin: 0; font-size: 0.85rem; color: var(--text-secondary);">
+                                ${bp.steps.map(s => `<li><strong>${s.action}:</strong> ${s.detail}</li>`).join('')}
+                            </ol>
+                        </div>
+                    `;
+                });
+                bpHtml += `</div></div>`;
+                bpContainer.innerHTML = bpHtml;
+            } else {
+                bpContainer.style.display = 'none';
+            }
+        }
+
+        // Filter and Render Problems
+        let filteredProblems = MECH342_EXAM_BANK.problems;
+        if (activeFilter !== 'all' && activeFilter !== 'blueprints') {
+            filteredProblems = filteredProblems.filter(p => p.category === activeFilter);
+        }
+
+        let probHtml = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3>Exam & Tutorial Problem Bank (${filteredProblems.length} Problems)</h3>
+            </div>
+        `;
+
+        filteredProblems.forEach(p => {
+            probHtml += `
+                <div class="concept-card" style="margin-bottom: 25px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <span class="badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">${p.category}</span>
+                            <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: 8px;">${p.source}</span>
+                            <h3 style="margin: 6px 0;">${p.title}</h3>
+                        </div>
+                    </div>
+
+                    <p style="margin: 10px 0; font-size: 0.95rem; line-height: 1.5;">${p.description}</p>
+
+                    <div class="problem-statement" style="margin-bottom: 15px;">
+                        <strong>Given Problem Data:</strong>
+                        <ul style="margin: 6px 0 0 18px;">
+                            ${p.given.map(g => `<li>${g}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <!-- Interactive Parameter Solver Card (if available) -->
+                    ${this.renderInteractiveSolverWidget(p)}
+
+                    <!-- Step-by-Step Breakdown Accordion -->
+                    <div class="steps-accordion" style="margin-top: 15px;">
+                        <h4 style="color: var(--primary); margin-bottom: 10px;">📝 Step-by-Step Rigorous Exam Solution:</h4>
+                        ${p.steps.map((st, sIdx) => `
+                            <div class="exam-solution-step" style="background: rgba(30, 41, 59, 0.4); border-left: 3px solid var(--accent); padding: 12px; border-radius: 6px; margin-bottom: 10px;">
+                                <h5 style="color: #facc15; margin: 0 0 6px 0;">${st.title}</h5>
+                                <div style="font-size: 0.9rem; line-height: 1.6;">${st.content}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="pedagogy-alert tip" style="margin-top: 15px;">
+                        <div class="alert-icon">💡</div>
+                        <div class="alert-body">
+                            <strong>Exam Takeaway:</strong> ${p.keyTakeaway}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        probContainer.innerHTML = probHtml;
+
+        setTimeout(() => {
+            if (window.renderMathInElement) {
+                window.renderMathInElement(probContainer, {
+                    delimiters: [
+                        { left: "$$", right: "$$", display: true },
+                        { left: "$", right: "$", display: false }
+                    ]
+                });
+            }
+        }, 50);
+    },
+
+    filterExamBank(filter, btn) {
+        document.querySelectorAll('.exam-filter-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        this.renderExamBank(filter);
+    },
+
+    renderInteractiveSolverWidget(problem) {
+        if (problem.interactiveType === 'asg1-q1') {
+            const res = MatrixEngine.solveAsg1Q1(problem.defaultInputs.F, problem.defaultInputs.a);
+            return `
+                <div class="solver-widget" style="background: rgba(15, 23, 42, 0.6); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h5 style="margin: 0; color: #38bdf8;">⚡ Live Parameter Solver & Unit Converter</h5>
+                        <button class="btn btn-sm btn-outline" onclick="App.runAsg1Q1Live()">Solve Custom Inputs</button>
+                    </div>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 10px;">
+                        <label style="font-size: 0.85rem;">Force (bk): <input id="asg1q1-in-f" type="number" step="0.5" value="6.5" style="width: 70px; padding: 4px; border-radius: 4px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);"></label>
+                        <label style="font-size: 0.85rem;">Acceleration (tr/ht²): <input id="asg1q1-in-a" type="number" step="0.5" value="4.0" style="width: 70px; padding: 4px; border-radius: 4px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);"></label>
+                    </div>
+                    <div id="asg1q1-live-result" class="eigen-grid" style="font-size: 0.85rem;">
+                        <div class="item"><strong>Mass (wacky):</strong> ${res.m_wacky} (bk·ht²)/tr</div>
+                        <div class="item"><strong>Mass (kg):</strong> ${res.m_kg} kg</div>
+                        <div class="item"><strong>g (wacky):</strong> ${res.g_wacky} tr/ht²</div>
+                    </div>
+                </div>
+            `;
+        } else if (problem.interactiveType === 'asg1-q2') {
+            const res = MatrixEngine.solveAsg1Q2(37);
+            return `
+                <div class="solver-widget" style="background: rgba(15, 23, 42, 0.6); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h5 style="margin: 0; color: #38bdf8;">⚡ Live Skew Bracket Rotation Solver</h5>
+                        <button class="btn btn-sm btn-outline" onclick="App.runAsg1Q2Live()">Calculate</button>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 0.85rem;">Bracket Rotation Angle &phi;: <input id="asg1q2-in-phi" type="number" step="1" value="37" style="width: 80px; padding: 4px; border-radius: 4px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);">&deg;</label>
+                    </div>
+                    <div id="asg1q2-live-result" class="eigen-grid" style="font-size: 0.85rem;">
+                        <div class="item"><strong>Alignment Angles:</strong> &alpha; = ${res.alphaDeg}&deg;, &beta; = ${res.betaDeg}&deg;</div>
+                        <div class="item"><strong>Rotated P in XYZ:</strong> [${res.rP_f.join(', ')}] mm</div>
+                    </div>
+                </div>
+            `;
+        } else if (problem.interactiveType === 'tut3-q1') {
+            const res = MatrixEngine.solveTut3Q1(1.0, 2.0, 0.5, 45);
+            return `
+                <div class="solver-widget" style="background: rgba(15, 23, 42, 0.6); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h5 style="margin: 0; color: #38bdf8;">⚡ Live Cylindrical Sliding Bar Solver</h5>
+                        <button class="btn btn-sm btn-outline" onclick="App.runTut3Q1Live()">Evaluate</button>
+                    </div>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;">
+                        <label style="font-size: 0.85rem;">Length L (m): <input id="tut3q1-in-L" type="number" step="0.1" value="1.0" style="width: 60px; padding: 4px; border-radius: 4px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);"></label>
+                        <label style="font-size: 0.85rem;">Spin &Omega; (rad/s): <input id="tut3q1-in-w" type="number" step="0.5" value="2.0" style="width: 60px; padding: 4px; border-radius: 4px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);"></label>
+                        <label style="font-size: 0.85rem;">Table Speed u (m/s): <input id="tut3q1-in-u" type="number" step="0.1" value="0.5" style="width: 60px; padding: 4px; border-radius: 4px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);"></label>
+                        <label style="font-size: 0.85rem;">Angle &theta;: <input id="tut3q1-in-th" type="number" step="1" value="45" style="width: 60px; padding: 4px; border-radius: 4px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-color);">&deg;</label>
+                    </div>
+                    <div id="tut3q1-live-result" class="eigen-grid" style="font-size: 0.85rem;">
+                        <div class="item"><strong>Velocity v_B:</strong> [${res.v.join(', ')}] m/s (|v| = ${res.speed} m/s)</div>
+                        <div class="item"><strong>Acceleration a_B:</strong> [${res.a.join(', ')}] m/s² (|a| = ${res.accelMag} m/s²)</div>
+                    </div>
+                </div>
+            `;
+        }
+        return '';
+    },
+
+    runAsg1Q1Live() {
+        const F = parseFloat(document.getElementById('asg1q1-in-f').value) || 6.5;
+        const a = parseFloat(document.getElementById('asg1q1-in-a').value) || 4.0;
+        const res = MatrixEngine.solveAsg1Q1(F, a);
+        const el = document.getElementById('asg1q1-live-result');
+        if (el) {
+            el.innerHTML = `
+                <div class="item"><strong>Mass (wacky):</strong> ${res.m_wacky} (bk·ht²)/tr</div>
+                <div class="item"><strong>Mass (kg):</strong> ${res.m_kg} kg</div>
+                <div class="item"><strong>g (wacky):</strong> ${res.g_wacky} tr/ht²</div>
+            `;
+        }
+    },
+
+    runAsg1Q2Live() {
+        const phi = parseFloat(document.getElementById('asg1q2-in-phi').value) || 37;
+        const res = MatrixEngine.solveAsg1Q2(phi);
+        const el = document.getElementById('asg1q2-live-result');
+        if (el) {
+            el.innerHTML = `
+                <div class="item"><strong>Alignment Angles:</strong> &alpha; = ${res.alphaDeg}&deg;, &beta; = ${res.betaDeg}&deg;</div>
+                <div class="item"><strong>Rotated P in XYZ:</strong> [${res.rP_f.join(', ')}] mm</div>
+            `;
+        }
+    },
+
+    runTut3Q1Live() {
+        const L = parseFloat(document.getElementById('tut3q1-in-L').value) || 1.0;
+        const w = parseFloat(document.getElementById('tut3q1-in-w').value) || 2.0;
+        const u = parseFloat(document.getElementById('tut3q1-in-u').value) || 0.5;
+        const th = parseFloat(document.getElementById('tut3q1-in-th').value) || 45;
+        const res = MatrixEngine.solveTut3Q1(L, w, u, th);
+        const el = document.getElementById('tut3q1-live-result');
+        if (el) {
+            el.innerHTML = `
+                <div class="item"><strong>Velocity v_B:</strong> [${res.v.join(', ')}] m/s (|v| = ${res.speed} m/s)</div>
+                <div class="item"><strong>Acceleration a_B:</strong> [${res.a.join(', ')}] m/s² (|a| = ${res.accelMag} m/s²)</div>
+            `;
+        }
+    },
+
     renderFormulaVault() {
         const container = document.getElementById('formula-vault-list');
         if (!container) return;

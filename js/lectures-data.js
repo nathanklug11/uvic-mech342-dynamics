@@ -645,49 +645,695 @@ const MECH342_CURRICULUM = {
         },
 
         {
-            id: "lec_future",
-            number: "Roadmap",
-            title: "Curriculum Extension & Future Lectures",
-            subtitle: "Upcoming Modules in MECH 342 & Extensibility Architecture",
-            ginsbergRef: "Chapters 2, 4, 5, 6, 7",
-            summary: "Provides forward-looking scaffolding for remaining course topics and allows users or instructors to add custom lecture content into the engine.",
-            pedagogicalFocus: "Constructive alignment, connecting kinematics to kinetics, and expandable course architecture.",
+            id: "lec4",
+            number: 4,
+            title: "Common (Orthogonal) Curvilinear Coordinates",
+            subtitle: "Cylindrical & Spherical Frameworks, Scale Factors, Moving Unit Vectors, & Rate Derivatives",
+            ginsbergRef: "Ginsberg §2.2 (pp. 52-78)",
+            summary: "Generalizes 3D spatial kinematics from Cartesian coordinates to arbitrary orthogonal curvilinear coordinates u1, u2, u3. Derives scale factors h_i, base vectors, dynamic unit vectors e_i, and completes the kinematic ladder up to acceleration with full physical dissection of centripetal, Coriolis, and tangential terms in Cylindrical and Spherical systems.",
+            pedagogicalFocus: "Understanding why moving basis vectors have non-zero derivatives; mapping abstract coordinates (R, θ, z) and (r, φ, θ) to intuitive physical directions and exam-ready formulas.",
             
             tabs: [
                 {
                     id: "concept",
-                    title: "Future Lecture Roadmap",
+                    title: "Concept & Intuition",
                     contentHtml: `
                         <div class="concept-card">
-                            <h3>🚀 Next Steps in the UVic MECH 342 Curriculum</h3>
-                            <div class="future-lectures-grid">
-                                <div class="future-box">
-                                    <span class="lec-badge">Lecture 4</span>
-                                    <h4>Angular Velocity & The Transport Theorem</h4>
-                                    <p>Infinitesimal rotations, derivation of Poisson's formulas ($\\dot{\\vec{e}} = \\vec{\\omega} \\times \\vec{e}$), and the general transport theorem for differentiating vectors in moving frames.</p>
-                                </div>
-                                <div class="future-box">
-                                    <span class="lec-badge">Lecture 5</span>
-                                    <h4>Spatial Kinematics of Mechanisms</h4>
-                                    <p>Relative velocity and acceleration equations in 3D: $\\vec{a}_P = \\vec{a}_O + \\dot{\\vec{\\omega}} \\times \\vec{r}_{P/O} + \\vec{\\omega} \\times (\\vec{\\omega} \\times \\vec{r}_{P/O}) + 2\\vec{\\omega} \\times (\\vec{v}_{rel}) + \\vec{a}_{rel}$.</p>
-                                </div>
-                                <div class="future-box">
-                                    <span class="lec-badge">Lecture 6</span>
-                                    <h4>Inertia Matrix & Angular Momentum of Rigid Bodies</h4>
-                                    <p>Mass moments and products of inertia, transformation of inertia tensors $[I'] = [R][I][R]^T$, and principal axes via eigenvalue decomposition.</p>
-                                </div>
-                                <div class="future-box">
-                                    <span class="lec-badge">Lecture 7</span>
-                                    <h4>Euler's Equations & 3D Rigid Body Kinetics</h4>
-                                    <p>Derivation of Euler's equations of motion: $\\sum M_x = I_{xx}\\dot{\\omega}_x - (I_{yy} - I_{zz})\\omega_y\\omega_z$, gyroscopic moments, and precession stability.</p>
+                            <h3>🌐 Why Do We Need Curvilinear Coordinates?</h3>
+                            <p>
+                                In <strong>Cartesian coordinates</strong>, the position vector is simply $\\vec{r}(t) = x(t)\\vec{I} + y(t)\\vec{J} + z(t)\\vec{K}$. Because the unit vectors $\\vec{I}, \\vec{J}, \\vec{K}$ are fixed in space, their time derivatives are identically zero: $\\dot{\\vec{I}} = \\dot{\\vec{J}} = \\dot{\\vec{K}} = \\vec{0}$.
+                            </p>
+                            <p>
+                                <strong>However</strong>, mechanical systems rarely move along rectilinear grid lines! Robotic arms revolve around vertical bearings, shafts rotate about axes, and pistons slide within cylinders. Describing circular or spherical motion using $(x, y, z)$ leads to unwieldy trigonometry and coupled nonlinear differential equations.
+                            </p>
+                            
+                            <div class="pedagogy-alert tip">
+                                <div class="alert-icon">💡</div>
+                                <div class="alert-body">
+                                    <strong>The Curvilinear Trade-Off:</strong>
+                                    We replace fixed Cartesian axes with moving coordinate surfaces. 
+                                    <em>The benefit:</em> The coordinates $(u_1, u_2, u_3)$ match the natural geometry of the mechanism (e.g. radius $R$, angle $\\theta$, height $z$).
+                                    <em>The cost:</em> The unit vectors $(\\vec{e}_1, \\vec{e}_2, \\vec{e}_3)$ change orientation as the particle moves! Therefore, <strong>unit vector derivatives are non-zero: $\\dot{\\vec{e}}_i \\neq \\vec{0}$</strong>.
                                 </div>
                             </div>
 
                             <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
 
-                            <h3>➕ Add Custom Lecture to This App</h3>
-                            <p>You can dynamically expand this application with your own lecture notes, problem sets, and derivations using the button below:</p>
-                            <button class="btn btn-primary" onclick="App.openAddLectureModal()">+ Add New Lecture Module</button>
+                            <h3>📐 The Universal 4-Step Curvilinear Framework</h3>
+                            <div class="roadmap-grid">
+                                <div class="roadmap-box kinematics">
+                                    <h4>1. Position Function</h4>
+                                    <p>Express Cartesian position $\\vec{r}$ in terms of 3 independent parameters $(u_1, u_2, u_3)$:</p>
+                                    $$\\vec{r} = x(u_1, u_2, u_3)\\vec{I} + y(u_1, u_2, u_3)\\vec{J} + z(u_1, u_2, u_3)\\vec{K}$$
+                                </div>
+                                <div class="roadmap-box kinetics">
+                                    <h4>2. Base Vectors & Scale Factors</h4>
+                                    <p>Differentiate along coordinate curves to find tangential base vectors $\\vec{g}_i$ and their lengths $h_i$:</p>
+                                    $$\\vec{g}_i = \\frac{\\partial \\vec{r}}{\\partial u_i}, \\quad h_i = |\\vec{g}_i|$$
+                                </div>
+                                <div class="roadmap-box solution">
+                                    <h4>3. Moving Unit Vectors</h4>
+                                    <p>Normalize base vectors to form an orthonormal triad $\\vec{e}_i$:</p>
+                                    $$\\vec{e}_i = \\frac{1}{h_i} \\frac{\\partial \\vec{r}}{\\partial u_i}, \\quad \\vec{e}_i \\cdot \\vec{e}_j = \\delta_{ij}$$
+                                </div>
+                                <div class="roadmap-box kinematics">
+                                    <h4>4. Kinematic Ladder</h4>
+                                    <p>Climb from velocity $\\vec{v} = \\sum h_i \\dot{u}_i \\vec{e}_i$ to acceleration $\\vec{a}$ by accounting for $\\dot{\\vec{e}}_i$:</p>
+                                    $$\\vec{a} = \\frac{d\\vec{v}}{dt} = \\sum (h_i \\dot{u}_i)^\\cdot \\vec{e}_i + \\sum h_i \\dot{u}_i \\dot{\\vec{e}}_i$$
+                                </div>
+                            </div>
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>📊 Summary of Common Orthogonal Coordinate Systems</h3>
+                            <table class="concept-table">
+                                <thead>
+                                    <tr>
+                                        <th>System</th>
+                                        <th>Parameters $(u_1, u_2, u_3)$</th>
+                                        <th>Scale Factors $(h_1, h_2, h_3)$</th>
+                                        <th>Basis Triad</th>
+                                        <th>Differential Arc Length $ds^2$</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Cartesian</strong></td>
+                                        <td>$(x, y, z)$</td>
+                                        <td>$h_x=1, h_y=1, h_z=1$</td>
+                                        <td>$\\vec{I}, \\vec{J}, \\vec{K}$</td>
+                                        <td>$dx^2 + dy^2 + dz^2$</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Cylindrical</strong></td>
+                                        <td>$(R, \\theta, z)$</td>
+                                        <td>$h_R=1, h_\\theta=R, h_z=1$</td>
+                                        <td>$\\vec{e}_R, \\vec{e}_\\theta, \\vec{e}_z$</td>
+                                        <td>$dR^2 + R^2 d\\theta^2 + dz^2$</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Spherical (Ginsberg)</strong></td>
+                                        <td>$(r, \\phi, \\theta)$</td>
+                                        <td>$h_r=1, h_\\phi=r, h_\\theta=r\\sin\\phi$</td>
+                                        <td>$\\vec{e}_r, \\vec{e}_\\phi, \\vec{e}_\\theta$</td>
+                                        <td>$dr^2 + r^2 d\\phi^2 + r^2\\sin^2\\phi d\\theta^2$</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `
+                },
+                {
+                    id: "derivation",
+                    title: "Mathematical Walkthrough",
+                    contentHtml: `
+                        <div class="math-card">
+                            <h3>🔬 Cylindrical Coordinates Kinematics Derivation</h3>
+                            <p>Let a particle be located by polar radius $R$ in the horizontal plane, azimuth angle $\\theta$ from the $X$-axis, and elevation $z$ along the vertical $Z$-axis:</p>
+                            $$\\vec{r} = R\\cos\\theta\\vec{I} + R\\sin\\theta\\vec{J} + z\\vec{K}$$
+
+                            <h4>Step 1: Basis Vectors & Scale Factors</h4>
+                            $$\\begin{aligned}
+                                \\vec{g}_R &= \\frac{\\partial\\vec{r}}{\\partial R} = \\cos\\theta\\vec{I} + \\sin\\theta\\vec{J} \\implies h_R = |\\vec{g}_R| = 1, \\quad \\vec{e}_R = \\cos\\theta\\vec{I} + \\sin\\theta\\vec{J} \\\\
+                                \\vec{g}_\\theta &= \\frac{\\partial\\vec{r}}{\\partial \\theta} = -R\\sin\\theta\\vec{I} + R\\cos\\theta\\vec{J} \\implies h_\\theta = |\\vec{g}_\\theta| = R, \\quad \\vec{e}_\\theta = -\\sin\\theta\\vec{I} + \\cos\\theta\\vec{J} \\\\
+                                \\vec{g}_z &= \\frac{\\partial\\vec{r}}{\\partial z} = \\vec{K} \\implies h_z = 1, \\quad \\vec{e}_z = \\vec{K}
+                            \\end{aligned}$$
+
+                            <h4>Step 2: Time Rates of Change of Moving Basis Vectors</h4>
+                            <p>Differentiating $\\vec{e}_R$ and $\\vec{e}_\\theta$ with respect to time:</p>
+                            $$\\begin{aligned}
+                                \\dot{\\vec{e}}_R &= \\frac{d}{dt}(\\cos\\theta\\vec{I} + \\sin\\theta\\vec{J}) = -\\dot{\\theta}\\sin\\theta\\vec{I} + \\dot{\\theta}\\cos\\theta\\vec{J} = \\dot{\\theta}\\vec{e}_\\theta \\\\
+                                \\dot{\\vec{e}}_\\theta &= \\frac{d}{dt}(-\\sin\\theta\\vec{I} + \\cos\\theta\\vec{J}) = -\\dot{\\theta}\\cos\\theta\\vec{I} - \\dot{\\theta}\\sin\\theta\\vec{J} = -\\dot{\\theta}\\vec{e}_R \\\\
+                                \\dot{\\vec{e}}_z &= \\vec{0}
+                            \\end{aligned}$$
+
+                            <h4>Step 3: Velocity Vector in Cylindrical Coordinates</h4>
+                            $$\\vec{v} = \\frac{d}{dt}(R\\vec{e}_R + z\\vec{e}_z) = \\dot{R}\\vec{e}_R + R\\dot{\\vec{e}}_R + \\dot{z}\\vec{e}_z = \\dot{R}\\vec{e}_R + R\\dot{\\theta}\\vec{e}_\\theta + \\dot{z}\\vec{e}_z$$
+
+                            <h4>Step 4: Acceleration Vector & Physical Dissection</h4>
+                            $$\\begin{aligned}
+                                \\vec{a} &= \\frac{d\\vec{v}}{dt} = \\frac{d}{dt}\\left(\\dot{R}\\vec{e}_R + R\\dot{\\theta}\\vec{e}_\\theta + \\dot{z}\\vec{e}_z\\right) \\\\
+                                &= (\\ddot{R}\\vec{e}_R + \\dot{R}\\dot{\\vec{e}}_R) + (\\dot{R}\\dot{\\theta}\\vec{e}_\\theta + R\\ddot{\\theta}\\vec{e}_\\theta + R\\dot{\\theta}\\dot{\\vec{e}}_\\theta) + \\ddot{z}\\vec{e}_z \\\\
+                                &= \\ddot{R}\\vec{e}_R + \\dot{R}(\\dot{\\theta}\\vec{e}_\\theta) + \\dot{R}\\dot{\\theta}\\vec{e}_\\theta + R\\ddot{\\theta}\\vec{e}_\\theta + R\\dot{\\theta}(-\\dot{\\theta}\\vec{e}_R) + \\ddot{z}\\vec{e}_z \\\\
+                                &= \\underbrace{(\\ddot{R} - R\\dot{\\theta}^2)}_{a_R}\\vec{e}_R + \\underbrace{(R\\ddot{\\theta} + 2\\dot{R}\\dot{\\theta})}_{a_\\theta}\\vec{e}_\\theta + \\underbrace{\\ddot{z}}_{a_z}\\vec{e}_z
+                            \\end{aligned}$$
+
+                            <div class="pedagogy-alert note">
+                                <div class="alert-icon">🔍</div>
+                                <div class="alert-body">
+                                    <strong>Exam Dissection of Acceleration Terms:</strong>
+                                    <ul>
+                                        <li>$\\ddot{R}$: Radial acceleration due to changing extension along the arm.</li>
+                                        <li>$-R\\dot{\\theta}^2$: <strong>Centripetal acceleration</strong> directed inward toward the rotation axis.</li>
+                                        <li>$R\\ddot{\\theta}$: Tangential acceleration due to angular acceleration of the arm.</li>
+                                        <li>$2\\dot{R}\\dot{\\theta}$: <strong>Coriolis acceleration</strong>! Arises from two equal contributions: (1) velocity $\\dot{R}$ rotating direction, and (2) moving radially into a region of greater tangential speed $\\omega R$.</li>
+                                        <li>$\\ddot{z}$: Axial vertical acceleration.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>🌐 Spherical Coordinates Kinematics (Ginsberg §2.2.2)</h3>
+                            <p>Coordinates: radial distance $r$, polar angle / colatitude $\\phi$ from $+Z$ axis ($0 \\le \\phi \\le \\pi$), and azimuth $\\theta$ from $+X$ axis:</p>
+                            $$\\vec{r} = r\\sin\\phi\\cos\\theta\\vec{I} + r\\sin\\phi\\sin\\theta\\vec{J} + r\\cos\\phi\\vec{K}$$
+                            <p><strong>Scale factors:</strong> $h_r = 1$, $h_\\phi = r$, $h_\\theta = r\\sin\\phi$.</p>
+                            <p><strong>Velocity:</strong></p>
+                            $$\\vec{v} = \\dot{r}\\vec{e}_r + r\\dot{\\phi}\\vec{e}_\\phi + r\\sin\\phi\\dot{\\theta}\\vec{e}_\\theta$$
+                            <p><strong>Acceleration:</strong></p>
+                            $$\\begin{aligned}
+                                a_r &= \\ddot{r} - r\\dot{\\phi}^2 - r\\sin^2\\phi\\dot{\\theta}^2 \\\\
+                                a_\\phi &= r\\ddot{\\phi} + 2\\dot{r}\\dot{\\phi} - r\\sin\\phi\\cos\\phi\\dot{\\theta}^2 \\\\
+                                a_\\theta &= r\\sin\\phi\\ddot{\\theta} + 2\\dot{r}\\sin\\phi\\dot{\\theta} + 2r\\cos\\phi\\dot{\\phi}\\dot{\\theta}
+                            \\end{aligned}$$
+                        </div>
+                    `
+                },
+                {
+                    id: "interactive",
+                    title: "Interactive 3D Simulation",
+                    simulationId: "sim-lec4"
+                },
+                {
+                    id: "pitfalls",
+                    title: "Common Pitfalls & Exam Checks",
+                    contentHtml: `
+                        <div class="pitfalls-card">
+                            <h3>⚠️ High-Frequency Exam Traps in Curvilinear Kinematics</h3>
+                            <div class="misconception-item">
+                                <strong>Pitfall 1: Forgetting the factor of 2 in Coriolis acceleration!</strong>
+                                <p>In Cylindrical coordinates, students often write $a_\\theta = R\\ddot{\\theta} + \\dot{R}\\dot{\\theta}$ instead of $R\\ddot{\\theta} + 2\\dot{R}\\dot{\\theta}$. The factor of 2 comes from two distinct physical sources: the rate of rotation of the radial unit vector $\\dot{\\vec{e}}_R$ acting on $\\dot{R}$, AND the change in radius $R$ altering the circumference speed $R\\dot{\\theta}$. Always remember: $2\\dot{R}\\dot{\\theta}$!</p>
+                            </div>
+                            <div class="misconception-item">
+                                <strong>Pitfall 2: Angle convention confusion in Spherical coordinates!</strong>
+                                <p>In physics, $\\theta$ is often polar and $\\phi$ is azimuth. In <strong>Jerry Ginsberg's MECH 342 text</strong>, $\\phi$ is the polar angle measured from the vertical $Z$-axis, and $\\theta$ is the azimuth angle in the horizontal $XY$-plane! When $\\phi = 90^\\circ$, the particle is on the horizontal plane and $\\sin\\phi = 1$.</p>
+                            </div>
+                            <div class="misconception-item">
+                                <strong>Pitfall 3: Assuming scale factors $h_i$ are dimensionless constants.</strong>
+                                <p>Scale factors convert changes in parameter ($du_i$) into true physical arc lengths ($ds_i = h_i du_i$). While $h_R = 1$ and $h_z = 1$ are dimensionless, $h_\\theta = R$ has units of <strong>meters</strong> (or feet)! Multiplying by $d\\theta$ (radians) gives meters.</p>
+                            </div>
+                        </div>
+                    `
+                }
+            ]
+        },
+
+        {
+            id: "lec5",
+            number: 5,
+            title: "Path Variables (Frenet-Serret) & Matched Kinematics",
+            subtitle: "The Frenet Frame (e_t, e_n, e_b), Osculating Plane, Curvature κ=1/ρ, & Forward vs. Inverse Problems",
+            ginsbergRef: "Ginsberg §2.3 - §2.4 (pp. 79-98)",
+            summary: "Formulates kinematics along an arbitrary 3D curve using intrinsic path coordinates s(t). Defines the Frenet-Serret triad: tangent e_t, principal normal e_n, and binormal e_b. Proves that acceleration has ZERO binormal component (a = v_dot e_t + (v^2/rho) e_n). Explores matched kinematical descriptions for solving forward and inverse mechanism problems.",
+            pedagogicalFocus: "Physical roller-coaster intuition for osculating plane; why your body feels normal acceleration in the turn but zero binormal acceleration; mastering matched kinematic descriptions.",
+            
+            tabs: [
+                {
+                    id: "concept",
+                    title: "Concept & Intuition",
+                    contentHtml: `
+                        <div class="concept-card">
+                            <h3>🎢 The Roller Coaster Analogy: Intrinsic Path Variables</h3>
+                            <p>
+                                Imagine you are riding a roller coaster through space in complete darkness. You don't know your absolute Cartesian $(X, Y, Z)$ coordinates relative to the amusement park ticket booth. What you DO know is:
+                            </p>
+                            <ul>
+                                <li>The distance $s(t)$ travelled along the steel track from the starting station.</li>
+                                <li>Your speedometer reading: $v(t) = \\dot{s}(t)$.</li>
+                                <li>The forces your body feels in your seat: pushed forward/backward when accelerating (tangent $\\vec{e}_t$), and pushed into the turn by banking (principal normal $\\vec{e}_n$).</li>
+                            </ul>
+
+                            <div class="pedagogy-alert tip">
+                                <div class="alert-icon">💡</div>
+                                <div class="alert-body">
+                                    <strong>Why Path Variables Are Unique:</strong>
+                                    Path variables describe motion <em>strictly from the geometry of the curve itself</em>, without needing any external coordinate origin! The coordinate is arc length $s(t)$, and the reference frame moves with the particle.
+                                </div>
+                            </div>
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>📐 The Frenet-Serret Moving Triad: $(\\vec{e}_t, \\vec{e}_n, \\vec{e}_b)$</h3>
+                            <div class="roadmap-grid">
+                                <div class="roadmap-box kinematics">
+                                    <h4>1. Tangent Vector $\\vec{e}_t$</h4>
+                                    <p>Points directly along the instantaneous direction of motion:</p>
+                                    $$\\vec{e}_t = \\frac{d\\vec{r}}{ds} = \\frac{\\vec{v}}{|\\vec{v}|}$$
+                                </div>
+                                <div class="roadmap-box kinetics">
+                                    <h4>2. Principal Normal $\\vec{e}_n$</h4>
+                                    <p>Points directly toward the <strong>center of curvature</strong> (inside the curve):</p>
+                                    $$\\vec{e}_n = \\frac{1}{\\kappa} \\frac{d\\vec{e}_t}{ds} = \\rho \\frac{d\\vec{e}_t}{ds}$$
+                                </div>
+                                <div class="roadmap-box solution">
+                                    <h4>3. Binormal Vector $\\vec{e}_b$</h4>
+                                    <p>Completes the right-handed triad perpendicular to the osculating plane:</p>
+                                    $$\\vec{e}_b = \\vec{e}_t \\times \\vec{e}_n$$
+                                </div>
+                            </div>
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>🎯 The Three Fundamental Planes</h3>
+                            <table class="concept-table">
+                                <thead>
+                                    <tr>
+                                        <th>Plane Name</th>
+                                        <th>Spanned By</th>
+                                        <th>Normal Vector</th>
+                                        <th>Physical Meaning</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Osculating Plane</strong></td>
+                                        <td>$\\vec{e}_t$ and $\\vec{e}_n$</td>
+                                        <td>$\\vec{e}_b$</td>
+                                        <td>The "best-fit" 2D plane containing the instantaneous velocity and acceleration vectors!</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Normal Plane</strong></td>
+                                        <td>$\\vec{e}_n$ and $\\vec{e}_b$</td>
+                                        <td>$\\vec{e}_t$</td>
+                                        <td>Cross-section perpendicular to motion.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Rectifying Plane</strong></td>
+                                        <td>$\\vec{e}_t$ and $\\vec{e}_b$</td>
+                                        <td>$\\vec{e}_n$</td>
+                                        <td>Tangent to the envelope surface containing the curve.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `
+                },
+                {
+                    id: "derivation",
+                    title: "Mathematical Walkthrough",
+                    contentHtml: `
+                        <div class="math-card">
+                            <h3>📐 Derivation of Velocity and Acceleration</h3>
+                            <p>Let position along the curve be parameterized by arc length $s$. By the chain rule:</p>
+                            $$\\vec{v} = \\frac{d\\vec{r}}{dt} = \\frac{d\\vec{r}}{ds} \\frac{ds}{dt} = v \\vec{e}_t$$
+                            <p><strong>Crucial Fact:</strong> Velocity in path variables has ONLY a tangential component!</p>
+
+                            <h4>Deriving Acceleration:</h4>
+                            $$\\vec{a} = \\frac{d\\vec{v}}{dt} = \\frac{d}{dt}(v\\vec{e}_t) = \\dot{v}\\vec{e}_t + v\\dot{\\vec{e}}_t$$
+                            <p>Now evaluate the rate of change of the unit tangent vector $\\dot{\\vec{e}}_t$:</p>
+                            $$\\dot{\\vec{e}}_t = \\frac{d\\vec{e}_t}{ds} \\frac{ds}{dt} = \\left(\\kappa \\vec{e}_n\\right) v = \\frac{v}{\\rho} \\vec{e}_n$$
+                            <p>Substituting back yields the fundamental equation of path kinematics (Ginsberg Eq. 2.3.11):</p>
+                            $$\\vec{a} = \\dot{v}\\vec{e}_t + \\frac{v^2}{\\rho}\\vec{e}_n + 0\\vec{e}_b$$
+
+                            <div class="pedagogy-alert tip">
+                                <div class="alert-icon">⭐</div>
+                                <div class="alert-body">
+                                    <strong>The Zero Binormal Acceleration Theorem:</strong>
+                                    Notice that the binormal component $a_b \\equiv 0$! Acceleration NEVER has a binormal component. This proves mathematically that <strong>both velocity $\\vec{v}$ and acceleration $\\vec{a}$ lie entirely within the osculating plane!</strong>
+                                </div>
+                            </div>
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>🔍 How to Calculate Radius of Curvature $\\rho$ on Exams</h3>
+                            <p>In general 3D motion, you are rarely handed the radius of curvature $\\rho$. How do you calculate it? Take the cross product of velocity and acceleration:</p>
+                            $$\\vec{v} \\times \\vec{a} = (v\\vec{e}_t) \\times \\left(\\dot{v}\\vec{e}_t + \\frac{v^2}{\\rho}\\vec{e}_n\\right) = \\frac{v^3}{\\rho} (\\vec{e}_t \\times \\vec{e}_n) = \\frac{v^3}{\\rho} \\vec{e}_b$$
+                            <p>Take the magnitude of both sides:</p>
+                            $$|\\vec{v} \\times \\vec{a}| = \\frac{v^3}{\\rho} \\implies \\rho = \\frac{|\\vec{v}|^3}{|\\vec{v} \\times \\vec{a}|}$$
+                            <p>This master formula works in ANY coordinate system (Cartesian, Cylindrical, Spherical)!</p>
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>🔄 Matched Kinematical Descriptions (§2.4)</h3>
+                            <p>An <strong>inverse problem</strong> arises when motion is known in one coordinate representation, and you must determine the motion parameters in another system:</p>
+                            <div class="problem-statement">
+                                <strong>Forward vs. Inverse Strategy:</strong>
+                                <ul>
+                                    <li><strong>Forward:</strong> Given coordinates $R(t), \\theta(t), z(t)$, differentiate directly to get velocity and acceleration.</li>
+                                    <li><strong>Inverse / Matching:</strong> Given total velocity $\\vec{v}$ or path shape, equate vector components:
+                                    $$\\vec{v} = v_x\\vec{I} + v_y\\vec{J} + v_z\\vec{K} = \\dot{R}\\vec{e}_R + R\\dot{\\theta}\\vec{e}_\\theta + \\dot{z}\\vec{e}_z = v\\vec{e}_t$$
+                                    Dotting with each basis vector produces 3 scalar equations to solve for the unknown parameter rates ($\\dot{R}, \\dot{\\theta}, \\dot{z}$).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    id: "interactive",
+                    title: "Interactive 3D Simulation",
+                    simulationId: "sim-lec5"
+                },
+                {
+                    id: "pitfalls",
+                    title: "Common Pitfalls & Exam Checks",
+                    contentHtml: `
+                        <div class="pitfalls-card">
+                            <h3>⚠️ Frequent Exam Traps in Path Variables</h3>
+                            <div class="misconception-item">
+                                <strong>Pitfall 1: Confusing path curvature radius $\\rho$ with cylindrical radius $R$!</strong>
+                                <p>A particle spiraling up a cylinder has $R = \\text{const}$. But its path is a 3D helix! The radius of curvature of a helix is $\\rho = R + \\frac{p^2}{R} > R$. Plugging $R$ into $a_n = \\frac{v^2}{R}$ instead of $\\rho$ will immediately cost full points!</p>
+                            </div>
+                            <div class="misconception-item">
+                                <strong>Pitfall 2: Confusing $\\dot{v}$ with $|\\vec{a}|$.</strong>
+                                <p>$\\dot{v} = \\frac{d}{dt}|\\vec{v}|$ is the rate of change of speed (scalar derivative). $|\\vec{a}| = \\sqrt{\\dot{v}^2 + (v^2/\\rho)^2}$ is the magnitude of total acceleration. If a car moves around a curve at constant speed $v$, then $\\dot{v} = 0$, but its acceleration is NOT zero: $|\\vec{a}| = \\frac{v^2}{\\rho}$!</p>
+                            </div>
+                            <div class="misconception-item">
+                                <strong>Pitfall 3: Assuming $\\vec{e}_n$ points outward.</strong>
+                                <p>$\\vec{e}_n$ always points <strong>inward</strong> towards the center of curvature (in the direction of the turning force). The centripetal acceleration vector is $+a_n\\vec{e}_n = +\\frac{v^2}{\\rho}\\vec{e}_n$.</p>
+                            </div>
+                        </div>
+                    `
+                }
+            ]
+        },
+
+        {
+            id: "lec6",
+            number: 6,
+            title: "Angular Velocity & The Transport Theorem",
+            subtitle: "Infinitesimal Rotations Commute, Poisson's Formulas (e_dot = omega x e), Rotating Frame Derivatives, & Superposition",
+            ginsbergRef: "Ginsberg §3.2.2 & §3.3 (pp. 148-175)",
+            summary: "Rigorously establishes that while finite rotations do not commute, infinitesimal angular displacements dθ DO commute, proving that angular velocity is a true spatial vector ω. Derives Poisson's kinematic relations and the celebrated Transport Theorem: (dA/dt)_XYZ = (dA/dt)_xyz + ω x A. Teaches how to construct angular velocity vectors by superposing joint rates across spatial mechanisms.",
+            pedagogicalFocus: "Resolving the non-commutativity paradox: why finite rotations can't be vectors, but angular velocity IS a vector! Mastering the Transport Theorem as the master key of 3D dynamics.",
+            
+            tabs: [
+                {
+                    id: "concept",
+                    title: "Concept & Intuition",
+                    contentHtml: `
+                        <div class="concept-card">
+                            <h3>🧩 The Paradox: Why is Angular Velocity a Vector if Rotations Don't Commute?</h3>
+                            <p>
+                                In Lecture #3, we proved that finite rotations do <strong>not</strong> commute: turning a book $90^\\circ$ about $X$ then $90^\\circ$ about $Y$ results in a completely different orientation than turning it about $Y$ then $X$. 
+                                Since vector addition is commutative ($\\vec{A} + \\vec{B} = \\vec{B} + \\vec{A}$), <strong>finite rotations CANNOT be represented as vectors!</strong>
+                            </p>
+                            <p>
+                                Why, then, in every dynamics course, do we write angular velocity as a vector: $\\vec{\\omega} = \\omega_x\\vec{i} + \\omega_y\\vec{j} + \\omega_z\\vec{k}$?
+                            </p>
+
+                            <div class="pedagogy-alert tip">
+                                <div class="alert-icon">💡</div>
+                                <div class="alert-body">
+                                    <strong>The Resolution: Infinitesimal Rotations DO Commute!</strong>
+                                    For an infinitesimal rotation $d\\vec{\\theta}$, the rotation matrix is:
+                                    $$[R(d\\vec{\\theta})] = [I] + [d\\tilde{\\theta}] + \\mathcal{O}(d\\theta^2)$$
+                                    Multiplying two infinitesimal rotations in opposite order:
+                                    $$[R_1][R_2] - [R_2][R_1] = ([I] + [d\\tilde{\\theta}_1] + [d\\tilde{\\theta}_2]) - ([I] + [d\\tilde{\\theta}_2] + [d\\tilde{\\theta}_1]) + \\mathcal{O}(d\\theta^2) = \\mathbf{0}$$
+                                    To first order, the order of multiplication DOES NOT MATTER! Dividing by $dt \\to 0$ gives:
+                                    $$\\vec{\\omega} = \\lim_{\\Delta t \\to 0} \\frac{\\Delta\\vec{\\theta}}{\\Delta t} = \\frac{d\\vec{\\theta}}{dt}$$
+                                    Angular velocity is a mathematically rigorous vector!
+                                </div>
+                            </div>
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>🐟 Poisson's Kinematic Relations</h3>
+                            <p>
+                                Consider a unit basis vector $\\vec{e}$ attached to a rotating body. Since its length is strictly fixed at 1, it cannot stretch or shrink. The only change it can undergo is rotation about $\\vec{\\omega}$:
+                            </p>
+                            <div class="roadmap-grid">
+                                <div class="roadmap-box kinematics">
+                                    <h4>$\\dot{\\vec{i}} = \\vec{\\omega} \\times \\vec{i}$</h4>
+                                    <p>Rate of change of body $x$-axis.</p>
+                                </div>
+                                <div class="roadmap-box kinetics">
+                                    <h4>$\\dot{\\vec{j}} = \\vec{\\omega} \\times \\vec{j}$</h4>
+                                    <p>Rate of change of body $y$-axis.</p>
+                                </div>
+                                <div class="roadmap-box solution">
+                                    <h4>$\\dot{\\vec{k}} = \\vec{\\omega} \\times \\vec{k}$</h4>
+                                    <p>Rate of change of body $z$-axis.</p>
+                                </div>
+                            </div>
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>🚀 The Transport Theorem (The Engine of 3D Dynamics)</h3>
+                            <p>
+                                Let $\\vec{A} = A_x\\vec{i} + A_y\\vec{j} + A_z\\vec{k}$ be <strong>any arbitrary physical vector</strong> (velocity, momentum, force, magnetic field) whose components are written in rotating frame $xyz$ moving with angular velocity $\\vec{\\omega}$.
+                            </p>
+                            <p>Differentiating with respect to the stationary reference frame $XYZ$ using product rule:</p>
+                            $$\\left(\\frac{d\\vec{A}}{dt}\\right)_{XYZ} = (\\dot{A}_x\\vec{i} + \\dot{A}_y\\vec{j} + \\dot{A}_z\\vec{k}) + (A_x\\dot{\\vec{i}} + A_y\\dot{\\vec{j}} + A_z\\dot{\\vec{k}})$$
+                            <p>Substituting Poisson's formulas into the second term:</p>
+                            $$A_x(\\vec{\\omega}\\times\\vec{i}) + A_y(\\vec{\\omega}\\times\\vec{j}) + A_z(\\vec{\\omega}\\times\\vec{k}) = \\vec{\\omega} \\times (A_x\\vec{i} + A_y\\vec{j} + A_z\\vec{k}) = \\vec{\\omega} \\times \\vec{A}$$
+                            <p>Therefore, we arrive at the celebrated <strong>Transport Theorem</strong>:</p>
+                            $$\\left(\\frac{d\\vec{A}}{dt}\\right)_{XYZ} = \\left(\\frac{d\\vec{A}}{dt}\\right)_{xyz} + \\vec{\\omega} \\times \\vec{A}$$
+                        </div>
+                    `
+                },
+                {
+                    id: "derivation",
+                    title: "Mathematical Walkthrough",
+                    contentHtml: `
+                        <div class="math-card">
+                            <h3>🔗 Superposition of Angular Velocities across Kinematic Chains</h3>
+                            <p>
+                                When multiple bodies are linked in series (e.g. turntable $\\to$ boom arm $\\to$ gimbal $\\to$ rotor), the total absolute angular velocity is the direct vector sum of the relative angular velocity at each joint:
+                            </p>
+                            $$\\vec{\\omega}_{N/0} = \\sum_{j=1}^N \\vec{\\omega}_{j/j-1} = \\vec{\\omega}_{1/0} + \\vec{\\omega}_{2/1} + \\cdots + \\vec{\\omega}_{N/N-1}$$
+
+                            <div class="problem-statement">
+                                <strong>Lecture #6 Example: Ginsberg Ex 3.9 (pp. 164)</strong>
+                                <ul>
+                                    <li>Vertical shaft $AB$ rotates about fixed vertical axis $Z$ at $\\Omega = 20\\text{ rad/s}$ ($+Z$ direction: $\\vec{\\omega}_{shaft} = 20\\vec{K}$).</li>
+                                    <li>Attached collar carries an arm tipped at an angle, around which a flywheel spins at $N = 3600\\text{ rpm}$ relative to the arm ($+e$ axis).</li>
+                                </ul>
+                                <strong>Building the Total Angular Velocity Vector:</strong>
+                                $$\\vec{\\omega}_{disk} = \\vec{\\omega}_{shaft} + \\vec{\\omega}_{disk/shaft} = 20\\vec{K} + \\left(\\frac{3600 \\times 2\\pi}{60}\\right)\\vec{e}_a = 20\\vec{K} + 377.0\\vec{e}_a \\text{ rad/s}$$
+                            </div>
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>⚡ Angular Acceleration $\\vec{\\alpha}$</h3>
+                            <p>By definition, angular acceleration is the time derivative of angular velocity:</p>
+                            $$\\vec{\\alpha} = \\left(\\frac{d\\vec{\\omega}}{dt}\\right)_{XYZ}$$
+                            <p>Applying the Transport Theorem to $\\vec{\\omega}$ itself:</p>
+                            $$\\left(\\frac{d\\vec{\\omega}}{dt}\\right)_{XYZ} = \\left(\\frac{d\\vec{\\omega}}{dt}\\right)_{xyz} + \\vec{\\omega} \\times \\vec{\\omega}$$
+                            <p>Because the cross product of any vector with itself is zero ($\\vec{\\omega} \\times \\vec{\\omega} = \\vec{0}$):</p>
+                            $$\\vec{\\alpha} = \\left(\\frac{d\\vec{\\omega}}{dt}\\right)_{XYZ} = \\left(\\frac{d\\vec{\\omega}}{dt}\\right)_{xyz}$$
+
+                            <div class="pedagogy-alert tip">
+                                <div class="alert-icon">⭐</div>
+                                <div class="alert-body">
+                                    <strong>Golden Exam Theorem:</strong>
+                                    The time derivative of the angular velocity vector $\\vec{\\omega}$ is <strong>identically the same</strong> whether computed in the stationary frame $XYZ$ or in the rotating body frame $xyz$!
+                                </div>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    id: "interactive",
+                    title: "Interactive 3D Simulation",
+                    simulationId: "sim-lec6"
+                },
+                {
+                    id: "pitfalls",
+                    title: "Common Pitfalls & Exam Checks",
+                    contentHtml: `
+                        <div class="pitfalls-card">
+                            <h3>⚠️ Fatal Mistakes in Transport Theorem Problems</h3>
+                            <div class="misconception-item">
+                                <strong>Pitfall 1: Differentiating basis vectors when building $\\vec{\\alpha}$!</strong>
+                                <p>If $\\vec{\\omega} = \\Omega\\vec{K} + \\omega_1\\vec{i}'$, when you take $\\frac{d\\vec{\\omega}}{dt}$, students often write $\\dot{\\Omega}\\vec{K} + \\dot{\\omega}_1\\vec{i}'$, forgetting that $\\vec{i}'$ is a moving unit vector! By Poisson's formula, $\\dot{\\vec{i}}' = (\\Omega\\vec{K}) \\times \\vec{i}'$. Dropping this term completely loses the gyroscopic acceleration!</p>
+                            </div>
+                            <div class="misconception-item">
+                                <strong>Pitfall 2: Using the wrong $\\vec{\\omega}$ in the transport cross-product.</strong>
+                                <p>In the formula $\\left(\\frac{d\\vec{A}}{dt}\\right)_{XYZ} = \\left(\\frac{d\\vec{A}}{dt}\\right)_{xyz} + \\vec{\\omega}_{frame} \\times \\vec{A}$, the angular velocity $\\vec{\\omega}_{frame}$ MUST be the angular velocity of the coordinate frame in which $\\vec{A}$'s scalar components are defined, NOT the angular velocity of the particle!</p>
+                            </div>
+                        </div>
+                    `
+                }
+            ]
+        },
+
+        {
+            id: "lec7",
+            number: 7,
+            title: "The Eulerian Angles (Ginsberg Z-Y-Z Sequence)",
+            subtitle: "Precession ψ, Nutation θ, Spin φ, Body-Fixed Angular Velocity, Acceleration, & Gimbal Lock",
+            ginsbergRef: "Ginsberg §4.2 (pp. 176-188)",
+            summary: "Presents Jerry Ginsberg's canonical 3-step body-fixed Eulerian angle sequence (Precession ψ about Z, Nutation θ about intermediate y', Spin φ about body z''). Derives the full 3x3 direction cosine rotation matrix [R], computes body-fixed angular velocity and angular acceleration components, and solves the inverse kinematic problem with full analysis of the Gimbal Lock singularity at sin(θ) = 0.",
+            pedagogicalFocus: "Understanding why body-fixed frames are essential for 3D kinetics (where inertia [I] is constant!); decoding the physical meaning of precession, nutation, and spin in gyroscopes, spacecraft, and spinning tops.",
+            
+            tabs: [
+                {
+                    id: "concept",
+                    title: "Concept & Intuition",
+                    contentHtml: `
+                        <div class="concept-card">
+                            <h3>🎯 Why Do We Need the Body-Fixed Eulerian Angles?</h3>
+                            <p>
+                                In 3D rigid body kinetics (Chapters 5 and 6), a body's mass moment of inertia tensor $[I]$ changes continuously with time if expressed in absolute space coordinates $XYZ$. 
+                                But when attached to the tumbling body itself, the mass distribution is stationary, meaning <strong>the body-fixed inertia tensor $[I]_{xyz}$ is completely constant!</strong>
+                            </p>
+                            <p>
+                                To exploit this, Jerry Ginsberg defines a standard 3-angle body-fixed sequence called the <strong>Eulerian Angles</strong>:
+                            </p>
+
+                            <div class="roadmap-grid">
+                                <div class="roadmap-box kinematics">
+                                    <h4>1. Precession ($\\psi$)</h4>
+                                    <p>Rotation about fixed vertical axis $Z$ by angle $\\psi$. Produces intermediate frame $x' y' z'$.</p>
+                                    $$\\vec{\\omega}_1 = \\dot{\\psi}\\vec{K}$$
+                                </div>
+                                <div class="roadmap-box kinetics">
+                                    <h4>2. Nutation ($\\theta$)</h4>
+                                    <p>Rotation about the intermediate $y'$-axis (line of nodes) by angle $\\theta$. Produces frame $x'' y'' z''$.</p>
+                                    $$\\vec{\\omega}_2 = \\dot{\\theta}\\vec{j}'$$
+                                </div>
+                                <div class="roadmap-box solution">
+                                    <h4>3. Spin ($\\phi$)</h4>
+                                    <p>Rotation about the final symmetry axis $z''$-axis by angle $\\phi$. Produces body frame $x y z$.</p>
+                                    $$\\vec{\\omega}_3 = \\dot{\\phi}\\vec{k}$$
+                                </div>
+                            </div>
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>⚠️ Ginsberg's Z-Y-Z Convention vs. Aerodynamic Z-Y-X (Yaw-Pitch-Roll)</h3>
+                            <table class="concept-table">
+                                <thead>
+                                    <tr>
+                                        <th>Convention</th>
+                                        <th>Rotation Axes</th>
+                                        <th>Common Applications</th>
+                                        <th>Singularity (Gimbal Lock)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Ginsberg Eulerian Angles</strong></td>
+                                        <td>$Z(\\psi) \\to y'(\\theta) \\to z''(\\phi)$</td>
+                                        <td>Gyroscopes, spinning tops, symmetrical rotors, MECH 342 exams</td>
+                                        <td>$\\sin\\theta = 0$ (vertical alignment $\\theta = 0^\\circ$ or $180^\\circ$)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Aerodynamic Tait-Bryan</strong></td>
+                                        <td>$Z(\\psi) \\to y'(\\theta) \\to x''(\\phi)$ (Yaw-Pitch-Roll)</td>
+                                        <td>Aircraft flight dynamics, marine submersibles, quadcopters</td>
+                                        <td>$\\cos\\theta = 0$ (vertical pitch $\\theta = \\pm 90^\\circ$)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `
+                },
+                {
+                    id: "derivation",
+                    title: "Mathematical Walkthrough",
+                    contentHtml: `
+                        <div class="math-card">
+                            <h3>📐 Derivation of the Complete Ginsberg Rotation Matrix $[R]$</h3>
+                            <p>Using the body-fixed pre-multiplication rule:</p>
+                            $$[R] = [R_Z(\\phi)] [R_Y(\\theta)] [R_Z(\\psi)]$$
+                            <p>Multiplying these three matrices in closed form (Lecture #7 Slide 7):</p>
+                            $$[R] = \\begin{bmatrix}
+                                c\\psi c\\theta c\\phi - s\\psi s\\phi & s\\psi c\\theta c\\phi + c\\psi s\\phi & -s\\theta c\\phi \\\\
+                                -c\\psi c\\theta s\\phi - s\\psi c\\phi & -s\\psi c\\theta s\\phi + c\\psi c\\phi & s\\theta s\\phi \\\\
+                                c\\psi s\\theta & s\\psi s\\theta & c\\theta
+                            \\end{bmatrix}$$
+                            <p>where $c\\psi = \\cos\\psi, s\\psi = \\sin\\psi$, etc.</p>
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>⚡ Angular Velocity in Body-Fixed Components</h3>
+                            <p>The vector angular velocity is the superposition of the three rates:</p>
+                            $$\\vec{\\omega} = \\dot{\\psi}\\vec{K} + \\dot{\\theta}\\vec{j}' + \\dot{\\phi}\\vec{k}$$
+                            <p>Transforming $\\vec{K}$ and $\\vec{j}'$ into the final body-fixed frame $(x, y, z)$:</p>
+                            $$\\begin{aligned}
+                                \\vec{K} &= -\\sin\\theta\\cos\\phi\\vec{i} + \\sin\\theta\\sin\\phi\\vec{j} + \\cos\\theta\\vec{k} \\\\
+                                \\vec{j}' &= \\sin\\phi\\vec{i} + \\cos\\phi\\vec{j} \\\\
+                                \\vec{k} &= \\vec{k}
+                            \\end{aligned}$$
+                            <p>Substituting into $\\vec{\\omega}$ gives Jerry Ginsberg's fundamental equations (Eq. 4.2.12, pp. 180):</p>
+                            $$\\begin{aligned}
+                                \\omega_x &= -\\dot{\\psi}\\sin\\theta\\cos\\phi + \\dot{\\theta}\\sin\\phi \\\\
+                                \\omega_y &= \\dot{\\psi}\\sin\\theta\\sin\\phi + \\dot{\\theta}\\cos\\phi \\\\
+                                \\omega_z &= \\dot{\\psi}\\cos\\theta + \\dot{\\phi}
+                            \\end{aligned}$$
+
+                            <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color);">
+
+                            <h3>🔄 Inverse Kinematic Extraction from Rotation Matrix $[R]$</h3>
+                            <p>Given numerical entries $R_{ij}$, how do we extract the physical angles $(\\psi, \\theta, \\phi)$?</p>
+                            <ol>
+                                <li><strong>Nutation $\\theta$:</strong> From $R_{33} = \\cos\\theta$ and $\\sqrt{R_{13}^2 + R_{23}^2} = \\sin\\theta$:
+                                $$\\theta = \\text{atan2}\\left(\\pm\\sqrt{R_{13}^2 + R_{23}^2}, R_{33}\\right)$$
+                                </li>
+                                <li><strong>Spin $\\phi$:</strong> From $\\frac{R_{23}}{-R_{13}} = \\frac{\\sin\\theta\\sin\\phi}{\\sin\\theta\\cos\\phi} = \\tan\\phi$:
+                                $$\\phi = \\text{atan2}(R_{23}, -R_{13})$$
+                                </li>
+                                <li><strong>Precession $\\psi$:</strong> From $\\frac{R_{31}}{R_{32}} = \\frac{\\cos\\psi\\sin\\theta}{\\sin\\psi\\sin\\theta}$:
+                                $$\\psi = \\text{atan2}(R_{31}, R_{32})$$
+                                </li>
+                            </ol>
+                        </div>
+                    `
+                },
+                {
+                    id: "interactive",
+                    title: "Interactive 3D Simulation",
+                    simulationId: "sim-lec7"
+                },
+                {
+                    id: "pitfalls",
+                    title: "Common Pitfalls & Exam Checks",
+                    contentHtml: `
+                        <div class="pitfalls-card">
+                            <h3>⚠️ Critical Exam Pitfalls in Eulerian Angles</h3>
+                            <div class="misconception-item">
+                                <strong>Pitfall 1: Gimbal Lock Singularity when $\\sin\\theta = 0$!</strong>
+                                <p>When $\\theta = 0$ or $\\pi$, the nutation angle is zero, causing the initial $Z$-axis and final $z''$-axis to become completely collinear! In the equations, $R_{13} = 0, R_{23} = 0$, causing $\\text{atan2}$ to be undefined. Physically, precession $\\psi$ and spin $\\phi$ rotate about the exact same physical axis, meaning 1 degree of freedom is lost!</p>
+                            </div>
+                            <div class="misconception-item">
+                                <strong>Pitfall 2: Mixing up intermediate unit vectors.</strong>
+                                <p>Notice that $\\dot{\\theta}$ is about the INTERMEDIATE axis $\\vec{j}'$, while $\\dot{\\psi}$ is about the GLOBAL axis $\\vec{K}$, and $\\dot{\\phi}$ is about the FINAL BODY axis $\\vec{k}$. You cannot simply add them as scalar components without transforming them to the same reference frame!</p>
+                            </div>
+                        </div>
+                    `
+                }
+            ]
+        },
+
+        {
+            id: "lec_future",
+            number: "Roadmap",
+            title: "Future Course Roadmap & Kinetics",
+            subtitle: "3D Inertia Tensors, Euler's Equations of Motion, Gyroscopic Precession, & Extensibility",
+            ginsbergRef: "Jerry Ginsberg Chapters 5, 6, 7 & 8",
+            summary: "Provides the bridge to 3D kinetics: rigid body momentum, mass moments and products of inertia, principal axes, Euler's dynamic equations of motion, and numerical simulation.",
+            pedagogicalFocus: "Transition from kinematics (geometry of motion) to kinetics (forces and torques generating motion).",
+            
+            tabs: [
+                {
+                    id: "concept",
+                    title: "Upcoming Kinetics Modules",
+                    contentHtml: `
+                        <div class="concept-card">
+                            <h3>🚀 The Road Ahead: Rigid Body 3D Kinetics</h3>
+                            <div class="future-lectures-grid">
+                                <div class="future-box">
+                                    <span class="lec-badge">Next Module</span>
+                                    <h4>Inertia Tensor & Principal Axes</h4>
+                                    <p>Mass moments ($I_{xx}, I_{yy}, I_{zz}$) and products of inertia ($I_{xy}, I_{xz}, I_{yz}$). Transformation law $[I'] = [R][I][R]^T$, and diagonalizing $[I]$ via eigenvector decomposition.</p>
+                                </div>
+                                <div class="future-box">
+                                    <span class="lec-badge">Next Module</span>
+                                    <h4>Angular Momentum of a Rigid Body</h4>
+                                    <p>Calculating $\\vec{H}_O = [I_O]\\vec{\\omega}$ and $\\vec{H}_G = [I_G]\\vec{\\omega}$. Crucial dependency on reference point selection (center of mass $G$ vs fixed pivot $O$).</p>
+                                </div>
+                                <div class="future-box">
+                                    <span class="lec-badge">Next Module</span>
+                                    <h4>Euler's Dynamic Equations of Motion</h4>
+                                    <p>Applying $\\sum \\vec{M}_G = \\dot{\\vec{H}}_G = [I_G]\\vec{\\alpha} + \\vec{\\omega}\\times([I_G]\\vec{\\omega})$ along principal axes: gyroscopic couples and stability.</p>
+                                </div>
+                                <div class="future-box">
+                                    <span class="lec-badge">Next Module</span>
+                                    <h4>State-Space Simulation & Stability</h4>
+                                    <p>Formulating second-order ODEs into first-order state-space form for integration with MATLAB <code>ode45</code> and Python <code>scipy.integrate.solve_ivp</code>.</p>
+                                </div>
+                            </div>
                         </div>
                     `
                 }

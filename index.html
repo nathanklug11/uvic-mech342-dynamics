@@ -26,6 +26,9 @@
             <button class="nav-tab-btn active" data-mode="lectures" onclick="App.switchMode('lectures')">
                 📚 <span>Lectures</span>
             </button>
+            <button class="nav-tab-btn" data-mode="exams" onclick="App.switchMode('exams')">
+                📝 <span>Exam & Tutorial Hub</span>
+            </button>
             <button class="nav-tab-btn" data-mode="labs" onclick="App.switchMode('labs')">
                 🔬 <span>3D Labs</span>
             </button>
@@ -85,6 +88,46 @@
                 </div>
             </section>
 
+            <!-- VIEW: EXAM & TUTORIAL PROBLEM-SOLVING HUB -->
+            <section id="view-exams" class="app-view" style="display: none;">
+                <div class="lecture-header">
+                    <div class="lec-meta-row">
+                        <span class="lec-badge-lg">Exam Mastery Hub</span>
+                        <span class="ginsberg-ref">UVic Midterm & Final Prep | Official Solutions</span>
+                    </div>
+                    <h2>MECH 342 Exam & Tutorial Problem-Solving Hub</h2>
+                    <p class="lec-sub">Systematic step-by-step problem blueprints, interactive parameter calculators, and verified solution walkthroughs for Assignment 1 and Tutorials 1 & 3.</p>
+                </div>
+
+                <div class="exam-subnav-row" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-sm btn-outline active exam-filter-btn" data-filter="all" onclick="App.filterExamBank('all', this)">
+                        🌟 All Content
+                    </button>
+                    <button class="btn btn-sm btn-outline exam-filter-btn" data-filter="blueprints" onclick="App.filterExamBank('blueprints', this)">
+                        📐 5 Exam Blueprints
+                    </button>
+                    <button class="btn btn-sm btn-outline exam-filter-btn" data-filter="Assignment 1" onclick="App.filterExamBank('Assignment 1', this)">
+                        📑 Assignment 1 Bank (Q1-Q4)
+                    </button>
+                    <button class="btn btn-sm btn-outline exam-filter-btn" data-filter="Tutorial 1" onclick="App.filterExamBank('Tutorial 1', this)">
+                        📘 Tutorial 1 Bank (Moments & Chains)
+                    </button>
+                    <button class="btn btn-sm btn-outline exam-filter-btn" data-filter="Tutorial 3" onclick="App.filterExamBank('Tutorial 3', this)">
+                        📙 Tutorial 3 Bank (Curvilinear & Cones)
+                    </button>
+                </div>
+
+                <!-- Blueprints Section -->
+                <div id="exam-blueprints-container" style="margin-bottom: 30px;">
+                    <!-- Rendered dynamically by App.renderExamBank() -->
+                </div>
+
+                <!-- Problems Section -->
+                <div id="exam-problems-container">
+                    <!-- Rendered dynamically by App.renderExamBank() -->
+                </div>
+            </section>
+
             <!-- VIEW 2: STANDALONE 3D LABORATORIES -->
             <section id="view-labs" class="app-view" style="display: none;">
                 <div class="lecture-header">
@@ -120,6 +163,18 @@
                     </button>
                     <button class="btn btn-sm btn-outline lab-nav-pill" data-sim="sim-gimbal" onclick="App.initStandaloneLab('sim-gimbal')">
                         8. 3-Ring Gimbals & Gimbal Lock
+                    </button>
+                    <button class="btn btn-sm btn-outline lab-nav-pill" data-sim="sim-lec4" onclick="App.initStandaloneLab('sim-lec4')">
+                        9. Lec 4 Curvilinear Space (Cylindrical & Spherical)
+                    </button>
+                    <button class="btn btn-sm btn-outline lab-nav-pill" data-sim="sim-lec5" onclick="App.initStandaloneLab('sim-lec5')">
+                        10. Lec 5 Path Variables & Frenet Track
+                    </button>
+                    <button class="btn btn-sm btn-outline lab-nav-pill" data-sim="sim-lec6" onclick="App.initStandaloneLab('sim-lec6')">
+                        11. Lec 6 Transport Theorem Vector Rate
+                    </button>
+                    <button class="btn btn-sm btn-outline lab-nav-pill" data-sim="sim-lec7" onclick="App.initStandaloneLab('sim-lec7')">
+                        12. Lec 7 Ginsberg Eulerian Angles (Z-Y-Z)
                     </button>
                 </div>
 
@@ -237,6 +292,7 @@
     <script src="js/matrix-engine.js"></script>
     <script src="js/three-simulations.js"></script>
     <script src="js/lectures-data.js"></script>
+    <script src="js/exam-bank-data.js"></script>
     <script src="js/quiz-data.js"></script>
     <script src="js/matlab-python-lab.js"></script>
     <script src="js/app.js"></script>

@@ -1559,8 +1559,842 @@ const Simulations = {
                 updateGimbals();
             }
         };
+    },
+
+    // -------------------------------------------------------------
+    // SIMULATION 4: Lecture 4 Curvilinear Coordinates Explorer
+    // (Cylindrical vs Spherical Space Lab)
+    // -------------------------------------------------------------
+    initSimLec4(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return null;
+        container.innerHTML = '';
+
+        const width = container.clientWidth || 600;
+        const height = container.clientHeight || 450;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0f1d);
+
+        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+        camera.position.set(8, 8, 8);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Lights
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(10, 15, 10);
+        scene.add(dirLight);
+
+        // Ground grid in global XY (Z is vertical)
+        const grid = new THREE.GridHelper(16, 16, 0x334155, 0x1e293b);
+        grid.rotation.x = Math.PI / 2;
+        scene.add(grid);
+
+        // Global stationary frame XYZ
+        const globalFrame = this.createFrameAxes(3.0);
+        scene.add(globalFrame);
+
+        // Particle Mesh
+        const particleGeo = new THREE.SphereGeometry(0.18, 32, 32);
+        const particleMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.2, metalness: 0.8 });
+        const particleMesh = new THREE.Mesh(particleGeo, particleMat);
+        scene.add(particleMesh);
+
+        // Coordinate surface: Transparent Cylinder
+        const cylGroup = new THREE.Group();
+        const cylGeo = new THREE.CylinderGeometry(2.5, 2.5, 5, 32, 1, true);
+        const cylMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.12, wireframe: true });
+        const cylMesh = new THREE.Mesh(cylGeo, cylMat);
+        cylMesh.rotation.x = Math.PI / 2;
+        cylGroup.add(cylMesh);
+        scene.add(cylGroup);
+
+        // Coordinate surface: Transparent Sphere
+        const sphGroup = new THREE.Group();
+        const sphGeo = new THREE.SphereGeometry(3.0, 24, 16);
+        const sphMat = new THREE.MeshBasicMaterial({ color: 0xa855f7, transparent: true, opacity: 0.1, wireframe: true });
+        const sphMesh = new THREE.Mesh(sphGeo, sphMat);
+        sphGroup.add(sphMesh);
+        sphGroup.visible = false;
+        scene.add(sphGroup);
+
+        // Dynamic Vector Arrows
+        // e_R (Red), e_theta (Green), e_z (Blue)
+        const arrowER = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 1.5, 0xef4444, 0.35, 0.12);
+        const arrowETh = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(), 1.5, 0x10b981, 0.35, 0.12);
+        const arrowEZ = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(), 1.5, 0x3b82f6, 0.35, 0.12);
+        scene.add(arrowER);
+        scene.add(arrowETh);
+        scene.add(arrowEZ);
+
+        // Velocity Arrow (Gold) & Acceleration Arrow (Magenta)
+        const arrowVel = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 1.8, 0xfacc15, 0.4, 0.15);
+        const arrowAcc = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 2.0, 0xec4899, 0.45, 0.18);
+        scene.add(arrowVel);
+        scene.add(arrowAcc);
+
+        // Position vector line from origin to particle
+        const posLineMat = new THREE.LineDashedMaterial({ color: 0x06b6d4, dashSize: 0.2, gapSize: 0.1 });
+        const posLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(2.5, 0, 1)]);
+        const posLine = new THREE.Line(posLineGeo, posLineMat);
+        posLine.computeLineDistances();
+        scene.add(posLine);
+
+        // State
+        const state = {
+            coordSystem: 'cylindrical', // 'cylindrical' or 'spherical'
+            R: 2.5,
+            thetaDeg: 45,
+            z: 1.5,
+            dotR: 0.5,
+            dotTh: 1.2,
+            dotZ: 0.8,
+            ddotR: 0.0,
+            ddotTh: 0.0,
+            ddotZ: 0.0,
+            // Spherical parameters
+            r: 3.0,
+            phiDeg: 60, // colatitude from vertical Z
+            dotPhi: 0.6,
+            ddotPhi: 0.0
+        };
+
+        function updateSimulation() {
+            let px = 0, py = 0, pz = 0;
+            let dirR = new THREE.Vector3(), dirTh = new THREE.Vector3(), dirZ = new THREE.Vector3();
+            let vVec = new THREE.Vector3(), aVec = new THREE.Vector3();
+            let kinInfo = null;
+
+            if (state.coordSystem === 'cylindrical') {
+                cylGroup.visible = true;
+                sphGroup.visible = false;
+                cylMesh.scale.set(state.R / 2.5, 1, state.R / 2.5);
+
+                const thRad = (state.thetaDeg * Math.PI) / 180;
+                px = state.R * Math.cos(thRad);
+                py = state.R * Math.sin(thRad);
+                pz = state.z;
+
+                dirR.set(Math.cos(thRad), Math.sin(thRad), 0).normalize();
+                dirTh.set(-Math.sin(thRad), Math.cos(thRad), 0).normalize();
+                dirZ.set(0, 0, 1);
+
+                kinInfo = MatrixEngine.cylindricalKinematics(
+                    state.R, state.dotR, state.ddotR,
+                    thRad, state.dotTh, state.ddotTh,
+                    state.z, state.dotZ, state.ddotZ
+                );
+
+                vVec = dirR.clone().multiplyScalar(kinInfo.velocity[0])
+                    .add(dirTh.clone().multiplyScalar(kinInfo.velocity[1]))
+                    .add(dirZ.clone().multiplyScalar(kinInfo.velocity[2]));
+
+                aVec = dirR.clone().multiplyScalar(kinInfo.acceleration[0])
+                    .add(dirTh.clone().multiplyScalar(kinInfo.acceleration[1]))
+                    .add(dirZ.clone().multiplyScalar(kinInfo.acceleration[2]));
+
+            } else {
+                cylGroup.visible = false;
+                sphGroup.visible = true;
+                sphMesh.scale.set(state.r / 3.0, state.r / 3.0, state.r / 3.0);
+
+                const phiRad = (state.phiDeg * Math.PI) / 180;
+                const thRad = (state.thetaDeg * Math.PI) / 180;
+
+                px = state.r * Math.sin(phiRad) * Math.cos(thRad);
+                py = state.r * Math.sin(phiRad) * Math.sin(thRad);
+                pz = state.r * Math.cos(phiRad);
+
+                dirR.set(Math.sin(phiRad) * Math.cos(thRad), Math.sin(phiRad) * Math.sin(thRad), Math.cos(phiRad)).normalize();
+                dirTh.set(Math.cos(phiRad) * Math.cos(thRad), Math.cos(phiRad) * Math.sin(thRad), -Math.sin(phiRad)).normalize(); // e_phi
+                dirZ.set(-Math.sin(thRad), Math.cos(thRad), 0).normalize(); // e_theta
+
+                kinInfo = MatrixEngine.sphericalKinematics(
+                    state.r, state.dotR, state.ddotR,
+                    phiRad, state.dotPhi, state.ddotPhi,
+                    thRad, state.dotTh, state.ddotTh
+                );
+
+                vVec = dirR.clone().multiplyScalar(kinInfo.velocity[0])
+                    .add(dirTh.clone().multiplyScalar(kinInfo.velocity[1]))
+                    .add(dirZ.clone().multiplyScalar(kinInfo.velocity[2]));
+
+                aVec = dirR.clone().multiplyScalar(kinInfo.acceleration[0])
+                    .add(dirTh.clone().multiplyScalar(kinInfo.acceleration[1]))
+                    .add(dirZ.clone().multiplyScalar(kinInfo.acceleration[2]));
+            }
+
+            const pos = new THREE.Vector3(px, py, pz);
+            particleMesh.position.copy(pos);
+
+            // Update position line
+            posLine.geometry.dispose();
+            posLine.geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), pos]);
+            posLine.computeLineDistances();
+
+            // Position basis arrows at particle
+            arrowER.position.copy(pos);
+            arrowER.setDirection(dirR);
+
+            arrowETh.position.copy(pos);
+            arrowETh.setDirection(dirTh);
+
+            arrowEZ.position.copy(pos);
+            arrowEZ.setDirection(dirZ);
+
+            // Velocity & Acceleration arrows
+            const vLen = Math.max(0.1, Math.min(4.0, vVec.length() * 0.8));
+            arrowVel.position.copy(pos);
+            if (vVec.length() > 0.01) {
+                arrowVel.setDirection(vVec.clone().normalize());
+                arrowVel.setLength(vLen, 0.35, 0.12);
+                arrowVel.visible = true;
+            } else {
+                arrowVel.visible = false;
+            }
+
+            const aLen = Math.max(0.1, Math.min(4.0, aVec.length() * 0.5));
+            arrowAcc.position.copy(pos);
+            if (aVec.length() > 0.01) {
+                arrowAcc.setDirection(aVec.clone().normalize());
+                arrowAcc.setLength(aLen, 0.35, 0.12);
+                arrowAcc.visible = true;
+            } else {
+                arrowAcc.visible = false;
+            }
+
+            // Update UI readout
+            const readout = document.getElementById('lec4-readout-card');
+            if (readout && kinInfo) {
+                if (state.coordSystem === 'cylindrical') {
+                    readout.innerHTML = `
+                        <div class="readout-card">
+                            <div class="readout-header">
+                                <h4>Cylindrical Kinematics Status</h4>
+                                <span class="badge">Speed: ${kinInfo.speed.toFixed(3)} m/s | |a|: ${kinInfo.accelMag.toFixed(3)} m/s²</span>
+                            </div>
+                            <div class="eigen-grid" style="margin-top: 8px;">
+                                <div class="item"><strong>Pos r:</strong> [${px.toFixed(2)}, ${py.toFixed(2)}, ${pz.toFixed(2)}] m</div>
+                                <div class="item"><strong>v:</strong> ${kinInfo.velocity[0].toFixed(2)} e_R + ${kinInfo.velocity[1].toFixed(2)} e_θ + ${kinInfo.velocity[2].toFixed(2)} e_z</div>
+                                <div class="item"><strong>Centripetal -R θ_dot²:</strong> ${kinInfo.breakdown.centripetal.toFixed(3)} m/s²</div>
+                                <div class="item" style="color: #ec4899;"><strong>Coriolis 2 R_dot θ_dot:</strong> ${kinInfo.breakdown.coriolis.toFixed(3)} m/s²</div>
+                            </div>
+                            <div style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);">
+                                <strong>Total Acceleration:</strong> a = (${kinInfo.acceleration[0].toFixed(3)}) e_R + (${kinInfo.acceleration[1].toFixed(3)}) e_θ + (${kinInfo.acceleration[2].toFixed(3)}) e_z m/s²
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    readout.innerHTML = `
+                        <div class="readout-card">
+                            <div class="readout-header">
+                                <h4>Spherical Kinematics Status (Ginsberg §2.2)</h4>
+                                <span class="badge">Speed: ${kinInfo.speed.toFixed(3)} m/s | |a|: ${kinInfo.accelMag.toFixed(3)} m/s²</span>
+                            </div>
+                            <div class="eigen-grid" style="margin-top: 8px;">
+                                <div class="item"><strong>Radius r:</strong> ${state.r.toFixed(2)} m</div>
+                                <div class="item"><strong>Colatitude φ:</strong> ${state.phiDeg.toFixed(1)}°</div>
+                                <div class="item"><strong>Azimuth θ:</strong> ${state.thetaDeg.toFixed(1)}°</div>
+                                <div class="item"><strong>Scale Factors:</strong> h_r=1, h_φ=${state.r.toFixed(2)}, h_θ=${(state.r * Math.sin(state.phiDeg*Math.PI/180)).toFixed(2)}</div>
+                            </div>
+                            <div style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);">
+                                <strong>Total Acceleration:</strong> a = (${kinInfo.acceleration[0].toFixed(2)}) e_r + (${kinInfo.acceleration[1].toFixed(2)}) e_φ + (${kinInfo.acceleration[2].toFixed(2)}) e_θ m/s²
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+        updateSimulation();
+
+        return {
+            setSystem(sys) {
+                state.coordSystem = sys;
+                updateSimulation();
+            },
+            setParams(params) {
+                Object.assign(state, params);
+                updateSimulation();
+            },
+            reset() {
+                state.R = 2.5;
+                state.thetaDeg = 45;
+                state.z = 1.5;
+                state.dotR = 0.5;
+                state.dotTh = 1.2;
+                state.dotZ = 0.8;
+                updateSimulation();
+            }
+        };
+    },
+
+    // -------------------------------------------------------------
+    // SIMULATION 5: Lecture 5 Path Variables (Frenet-Serret) 3D Track
+    // -------------------------------------------------------------
+    initSimLec5(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return null;
+        container.innerHTML = '';
+
+        const width = container.clientWidth || 600;
+        const height = container.clientHeight || 450;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0f1d);
+
+        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+        camera.position.set(10, 10, 12);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // Lights & Ground
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(15, 20, 15);
+        scene.add(dirLight);
+
+        const grid = new THREE.GridHelper(20, 20, 0x334155, 0x1e293b);
+        grid.rotation.x = Math.PI / 2;
+        scene.add(grid);
+
+        // Build 3D Helical Roller Coaster Curve
+        const curvePoints = [];
+        const R_track = 3.5;
+        const pitch = 0.35;
+        const totalPoints = 300;
+        for (let i = 0; i <= totalPoints; i++) {
+            const u = (i / totalPoints) * 4 * Math.PI; // 2 complete revolutions
+            const x = R_track * Math.cos(u);
+            const y = R_track * Math.sin(u);
+            const z = pitch * u - 2.5;
+            curvePoints.push(new THREE.Vector3(x, y, z));
+        }
+        const curve = new THREE.CatmullRomCurve3(curvePoints);
+        const tubeGeo = new THREE.TubeGeometry(curve, 200, 0.06, 8, false);
+        const tubeMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.4, metalness: 0.8 });
+        const trackMesh = new THREE.Mesh(tubeGeo, tubeMat);
+        scene.add(trackMesh);
+
+        // Particle Mesh (Roller Coaster Cart)
+        const cartGeo = new THREE.BoxGeometry(0.35, 0.25, 0.2);
+        const cartMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.2, metalness: 0.8 });
+        const cartMesh = new THREE.Mesh(cartGeo, cartMat);
+        scene.add(cartMesh);
+
+        // Frenet Triad Arrows: e_t (Green), e_n (Red), e_b (Blue)
+        const arrowEt = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 1.6, 0x10b981, 0.35, 0.12);
+        const arrowEn = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(), 1.6, 0xef4444, 0.35, 0.12);
+        const arrowEb = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(), 1.6, 0x3b82f6, 0.35, 0.12);
+        scene.add(arrowEt);
+        scene.add(arrowEn);
+        scene.add(arrowEb);
+
+        // Osculating Plane Visualizer (Transparent Quad)
+        const oscPlaneGeo = new THREE.PlaneGeometry(2.5, 2.5);
+        const oscPlaneMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.18, side: THREE.DoubleSide });
+        const oscPlaneMesh = new THREE.Mesh(oscPlaneGeo, oscPlaneMat);
+        scene.add(oscPlaneMesh);
+
+        // Osculating Circle Wireframe
+        const oscCircleGeo = new THREE.RingGeometry(3.5, 3.55, 64);
+        const oscCircleMat = new THREE.MeshBasicMaterial({ color: 0xec4899, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+        const oscCircleMesh = new THREE.Mesh(oscCircleGeo, oscCircleMat);
+        scene.add(oscCircleMesh);
+
+        const state = {
+            progress: 0.25, // 0 to 1 along curve
+            speed: 2.0,
+            dotSpeed: 0.5,
+            isAnimating: true
+        };
+
+        function updateFrenet() {
+            const tVal = state.progress % 1.0;
+            const pt = curve.getPointAt(tVal);
+            const tangent = curve.getTangentAt(tVal).normalize();
+
+            // Numerical curvature: derivative of tangent w.r.t arc length
+            const dt = 0.002;
+            const tNext = Math.min(1.0, tVal + dt);
+            const tanNext = curve.getTangentAt(tNext).normalize();
+            const dTan = tanNext.clone().sub(tangent).divideScalar(dt * curve.getLength());
+            
+            let normal = dTan.clone();
+            let curvature = normal.length();
+            if (curvature < 1e-4) {
+                normal = new THREE.Vector3(0, 1, 0);
+                curvature = 1e-4;
+            } else {
+                normal.normalize();
+            }
+
+            const binormal = new THREE.Vector3().crossVectors(tangent, normal).normalize();
+            const rho = 1.0 / curvature;
+
+            // Update Cart
+            cartMesh.position.copy(pt);
+            
+            // Orient cart along Frenet frame
+            const rotMatrix = new THREE.Matrix4().makeBasis(tangent, normal, binormal);
+            cartMesh.setRotationFromMatrix(rotMatrix);
+
+            // Update Frenet arrows
+            arrowEt.position.copy(pt);
+            arrowEt.setDirection(tangent);
+
+            arrowEn.position.copy(pt);
+            arrowEn.setDirection(normal);
+
+            arrowEb.position.copy(pt);
+            arrowEb.setDirection(binormal);
+
+            // Update Osculating Plane
+            oscPlaneMesh.position.copy(pt);
+            oscPlaneMesh.setRotationFromMatrix(rotMatrix);
+
+            // Center of curvature = pt + rho * normal
+            const centerOfCurv = pt.clone().add(normal.clone().multiplyScalar(rho));
+            oscCircleMesh.position.copy(centerOfCurv);
+            oscCircleMesh.setRotationFromMatrix(rotMatrix);
+            oscCircleMesh.scale.set(rho / 3.5, rho / 3.5, 1);
+
+            // Acceleration: a = dot_v * e_t + (v^2 / rho) * e_n
+            const a_t = state.dotSpeed;
+            const a_n = (state.speed * state.speed) / rho;
+            const a_total = Math.hypot(a_t, a_n);
+
+            // Update readout card
+            const readout = document.getElementById('lec5-readout-card');
+            if (readout) {
+                readout.innerHTML = `
+                    <div class="readout-card">
+                        <div class="readout-header">
+                            <h4>Frenet-Serret Kinematics Readout</h4>
+                            <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Osculating Radius: ρ = ${rho.toFixed(2)} m</span>
+                        </div>
+                        <div class="eigen-grid" style="margin-top: 8px;">
+                            <div class="item"><strong>Speed v = s_dot:</strong> ${state.speed.toFixed(2)} m/s</div>
+                            <div class="item"><strong>Tangential Accel a_t = v_dot:</strong> ${a_t.toFixed(2)} m/s²</div>
+                            <div class="item"><strong>Normal Accel a_n = v²/ρ:</strong> ${a_n.toFixed(2)} m/s²</div>
+                            <div class="item" style="color: #38bdf8;"><strong>Binormal Accel a_b:</strong> 0.00 m/s² (Theorem!)</div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);">
+                            <strong>Total Acceleration:</strong> |a| = √(a_t² + a_n²) = ${a_total.toFixed(3)} m/s² (lies strictly in osculating plane!)
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        let lastTime = performance.now();
+        function animate() {
+            requestAnimationFrame(animate);
+            const now = performance.now();
+            const deltaSec = (now - lastTime) / 1000;
+            lastTime = now;
+
+            if (state.isAnimating) {
+                state.progress += (state.speed * deltaSec) / curve.getLength();
+                if (state.progress > 1.0) state.progress -= 1.0;
+                updateFrenet();
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+        updateFrenet();
+
+        return {
+            setProgress(val) {
+                state.progress = parseFloat(val);
+                updateFrenet();
+            },
+            setSpeed(v) {
+                state.speed = parseFloat(v);
+                updateFrenet();
+            },
+            setDotSpeed(dv) {
+                state.dotSpeed = parseFloat(dv);
+                updateFrenet();
+            },
+            toggleAnimation() {
+                state.isAnimating = !state.isAnimating;
+            }
+        };
+    },
+
+    // -------------------------------------------------------------
+    // SIMULATION 6: Lecture 6 Transport Theorem Visualizer
+    // -------------------------------------------------------------
+    initSimLec6(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return null;
+        container.innerHTML = '';
+
+        const width = container.clientWidth || 600;
+        const height = container.clientHeight || 450;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0f1d);
+
+        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+        camera.position.set(7, 7, 7);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(10, 10, 15);
+        scene.add(dirLight);
+
+        // Fixed Global Frame XYZ
+        const globalFrame = this.createFrameAxes(2.5);
+        scene.add(globalFrame);
+
+        // Rotating Frame xyz Group (Turntable)
+        const rotFrameGroup = new THREE.Group();
+        const rotFrameAxes = this.createFrameAxes(2.0, 0.03, 0.4, 0.1);
+        rotFrameGroup.add(rotFrameAxes);
+
+        // Turntable disk
+        const diskGeo = new THREE.CylinderGeometry(2.5, 2.5, 0.08, 32);
+        const diskMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.5, transparent: true, opacity: 0.7 });
+        const diskMesh = new THREE.Mesh(diskGeo, diskMat);
+        diskMesh.rotation.x = Math.PI / 2;
+        rotFrameGroup.add(diskMesh);
+        scene.add(rotFrameGroup);
+
+        // Physical Vector A (Cyan arrow)
+        const arrowA = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 2.5, 0x06b6d4, 0.4, 0.15);
+        scene.add(arrowA);
+
+        // Relative Rate (dA/dt)_xyz (Green arrow)
+        const arrowRel = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(), 1.5, 0x10b981, 0.35, 0.12);
+        scene.add(arrowRel);
+
+        // Transport Term omega x A (Orange arrow)
+        const arrowOmegaCrossA = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(), 1.8, 0xf97316, 0.35, 0.12);
+        scene.add(arrowOmegaCrossA);
+
+        // Total Rate (dA/dt)_XYZ (Yellow arrow = sum)
+        const arrowTotal = new THREE.ArrowHelper(new THREE.Vector3(1, 1, 0), new THREE.Vector3(), 2.5, 0xfacc15, 0.45, 0.16);
+        scene.add(arrowTotal);
+
+        const state = {
+            omegaZ: 1.5,
+            lengthA: 2.2,
+            rateA: 0.8,
+            currentAngle: 0.0,
+            isRotating: true
+        };
+
+        function updateTransport() {
+            rotFrameGroup.rotation.z = state.currentAngle;
+
+            // In rotating frame xyz, vector A points along arm
+            const cosTh = Math.cos(state.currentAngle);
+            const sinTh = Math.sin(state.currentAngle);
+
+            const vecA = new THREE.Vector3(state.lengthA * cosTh, state.lengthA * sinTh, 0.5);
+            arrowA.setDirection(vecA.clone().normalize());
+            arrowA.setLength(vecA.length(), 0.4, 0.15);
+
+            // Relative rate in frame: (dA/dt)_xyz is purely radial extension along arm
+            const dAdt_rel = new THREE.Vector3(state.rateA * cosTh, state.rateA * sinTh, 0.0);
+            
+            // Frame angular velocity: omega = omegaZ * K
+            const omegaVec = new THREE.Vector3(0, 0, state.omegaZ);
+
+            // Transport term: omega x A
+            const transport = new THREE.Vector3().crossVectors(omegaVec, vecA);
+
+            // Total rate: sum of both
+            const dAdt_total = dAdt_rel.clone().add(transport);
+
+            // Position derivative arrows at the tip of vector A
+            const tip = vecA.clone();
+            arrowRel.position.copy(tip);
+            if (dAdt_rel.length() > 0.01) {
+                arrowRel.setDirection(dAdt_rel.clone().normalize());
+                arrowRel.setLength(Math.min(3, dAdt_rel.length()), 0.3, 0.1);
+            }
+
+            arrowOmegaCrossA.position.copy(tip);
+            if (transport.length() > 0.01) {
+                arrowOmegaCrossA.setDirection(transport.clone().normalize());
+                arrowOmegaCrossA.setLength(Math.min(3, transport.length() * 0.8), 0.3, 0.1);
+            }
+
+            arrowTotal.position.copy(tip);
+            if (dAdt_total.length() > 0.01) {
+                arrowTotal.setDirection(dAdt_total.clone().normalize());
+                arrowTotal.setLength(Math.min(4, dAdt_total.length() * 0.8), 0.35, 0.12);
+            }
+
+            const readout = document.getElementById('lec6-readout-card');
+            if (readout) {
+                readout.innerHTML = `
+                    <div class="readout-card">
+                        <div class="readout-header">
+                            <h4>Transport Theorem Real-Time Breakdown</h4>
+                            <span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #06b6d4;">(dA/dt)_XYZ = (dA/dt)_xyz + ω × A</span>
+                        </div>
+                        <div class="eigen-grid" style="margin-top: 8px;">
+                            <div class="item"><strong>Frame Rate ω:</strong> ${state.omegaZ.toFixed(2)} rad/s (Z-axis)</div>
+                            <div class="item"><strong>|A| Length:</strong> ${vecA.length().toFixed(2)} m</div>
+                            <div class="item" style="color: #10b981;"><strong>Relative Rate (dA/dt)_xyz:</strong> ${dAdt_rel.length().toFixed(2)} m/s</div>
+                            <div class="item" style="color: #f97316;"><strong>Transport ω × A:</strong> ${transport.length().toFixed(2)} m/s</div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.85rem; color: #facc15;">
+                            <strong>Total Absolute Rate:</strong> |(dA/dt)_XYZ| = ${dAdt_total.length().toFixed(3)} m/s
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        let lastTime = performance.now();
+        function animate() {
+            requestAnimationFrame(animate);
+            const now = performance.now();
+            const dt = (now - lastTime) / 1000;
+            lastTime = now;
+
+            if (state.isRotating) {
+                state.currentAngle += state.omegaZ * dt;
+                updateTransport();
+            }
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+        updateTransport();
+
+        return {
+            setOmega(w) {
+                state.omegaZ = parseFloat(w);
+                updateTransport();
+            },
+            setLengthA(len) {
+                state.lengthA = parseFloat(len);
+                updateTransport();
+            },
+            setRateA(r) {
+                state.rateA = parseFloat(r);
+                updateTransport();
+            },
+            toggleRotation() {
+                state.isRotating = !state.isRotating;
+            }
+        };
+    },
+
+    // -------------------------------------------------------------
+    // SIMULATION 7: Lecture 7 Ginsberg Eulerian Angles (Z-Y-Z)
+    // -------------------------------------------------------------
+    initSimLec7(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return null;
+        container.innerHTML = '';
+
+        const width = container.clientWidth || 600;
+        const height = container.clientHeight || 450;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0f1d);
+
+        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+        camera.position.set(7, 7, 7);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
+        dirLight.position.set(10, 15, 12);
+        scene.add(dirLight);
+
+        // Fixed Base Global Axes XYZ
+        const globalFrame = this.createFrameAxes(2.6);
+        scene.add(globalFrame);
+
+        // 3-Ring Gimbal Hierarchy for Ginsberg Z-Y-Z:
+        // Outer Group: Rotates about vertical Z (Precession psi)
+        const outerGroup = new THREE.Group();
+        scene.add(outerGroup);
+
+        const outerRingGeo = new THREE.TorusGeometry(2.4, 0.06, 16, 64);
+        const outerRingMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3, metalness: 0.8 }); // Gold
+        const outerRingMesh = new THREE.Mesh(outerRingGeo, outerRingMat);
+        outerGroup.add(outerRingMesh);
+
+        // Middle Group: Rotates about intermediate y' axis (Nutation theta)
+        const midGroup = new THREE.Group();
+        outerGroup.add(midGroup);
+
+        const midRingGeo = new THREE.TorusGeometry(1.8, 0.05, 16, 64);
+        const midRingMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.3, metalness: 0.8 }); // Cyan
+        const midRingMesh = new THREE.Mesh(midRingGeo, midRingMat);
+        midRingMesh.rotation.x = Math.PI / 2; // Lie in x'z' plane
+        midGroup.add(midRingMesh);
+
+        // Inner Group: Rotates about body z'' axis (Spin phi)
+        const innerGroup = new THREE.Group();
+        midGroup.add(innerGroup);
+
+        const innerRotorGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.25, 32);
+        const innerRotorMat = new THREE.MeshStandardMaterial({ color: 0xec4899, roughness: 0.2, metalness: 0.85 }); // Magenta
+        const innerRotorMesh = new THREE.Mesh(innerRotorGeo, innerRotorMat);
+        innerRotorMesh.rotation.x = Math.PI / 2; // Rotor axis aligned with z''
+        innerGroup.add(innerRotorMesh);
+
+        // Body frame axes attached to rotor
+        const bodyAxes = this.createFrameAxes(1.6, 0.03, 0.35, 0.1);
+        innerGroup.add(bodyAxes);
+
+        // Angular velocity vector arrow (White)
+        const arrowOmega = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(), 2.2, 0xffffff, 0.4, 0.14);
+        scene.add(arrowOmega);
+
+        const state = {
+            psiDeg: 30,    // Precession about Z
+            thetaDeg: 45,  // Nutation about y'
+            phiDeg: 60,    // Spin about z''
+            dotPsi: 1.5,
+            dotTheta: 0.8,
+            dotPhi: 8.0
+        };
+
+        function updateEulerZYZ() {
+            const psiRad = (state.psiDeg * Math.PI) / 180;
+            const thRad = (state.thetaDeg * Math.PI) / 180;
+            const phiRad = (state.phiDeg * Math.PI) / 180;
+
+            // Z-Y-Z body fixed sequence:
+            // 1. outerGroup rotates about Z by psi
+            outerGroup.rotation.z = psiRad;
+            // 2. midGroup rotates about y' by theta
+            midGroup.rotation.y = thRad;
+            // 3. innerGroup rotates about z'' by phi
+            innerGroup.rotation.z = phiRad;
+
+            const res = MatrixEngine.eulerZYZ(state.psiDeg, state.thetaDeg, state.phiDeg);
+            const omegaBody = MatrixEngine.eulerZYZOms(psiRad, thRad, phiRad, state.dotPsi, state.dotTheta, state.dotPhi);
+
+            // Convert body omega to global for visual arrow
+            const R_trans = MatrixEngine.transpose(res.R);
+            const omegaGlobal = MatrixEngine.multVec(R_trans, omegaBody);
+            const omVec = new THREE.Vector3(omegaGlobal[0], omegaGlobal[1], omegaGlobal[2]);
+            if (omVec.length() > 0.05) {
+                arrowOmega.setDirection(omVec.clone().normalize());
+                arrowOmega.setLength(Math.min(3.5, omVec.length() * 0.3), 0.35, 0.12);
+                arrowOmega.visible = true;
+            } else {
+                arrowOmega.visible = false;
+            }
+
+            const readout = document.getElementById('lec7-readout-card');
+            if (readout) {
+                readout.innerHTML = `
+                    <div class="readout-card">
+                        <div class="readout-header">
+                            <h4>Ginsberg Z-Y-Z Eulerian Angles Status</h4>
+                            <span class="badge ${res.isSingular ? 'locked' : ''}">
+                                ${res.isSingular ? '⚠️ GIMBAL LOCK ACTIVE!' : '✅ 3 Independent Rotational DOF'}
+                            </span>
+                        </div>
+                        <div class="eigen-grid" style="margin-top: 8px;">
+                            <div class="item"><strong>Precession ψ (Z):</strong> ${state.psiDeg.toFixed(1)}°</div>
+                            <div class="item"><strong>Nutation θ (y'):</strong> ${state.thetaDeg.toFixed(1)}°</div>
+                            <div class="item"><strong>Spin φ (z''):</strong> ${state.phiDeg.toFixed(1)}°</div>
+                            <div class="item"><strong>Matrix Trace:</strong> ${MatrixEngine.trace(res.R).toFixed(3)}</div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.85rem; color: #ec4899;">
+                            <strong>Body Angular Velocity:</strong> ω = (${omegaBody[0].toFixed(2)}) i + (${omegaBody[1].toFixed(2)}) j + (${omegaBody[2].toFixed(2)}) k rad/s
+                        </div>
+                        ${res.isSingular ? `
+                            <div style="margin-top: 8px; padding: 6px 10px; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; border-radius: 6px; font-size: 0.8rem; color: #fca5a5;">
+                                <strong>Singularity Warning:</strong> θ ≈ ${state.thetaDeg.toFixed(1)}° causes sin(θ) ≈ 0. Precession axis (Z) and spin axis (z'') align!
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+        updateEulerZYZ();
+
+        return {
+            setAngles(psi, th, phi) {
+                if (psi !== undefined) state.psiDeg = parseFloat(psi);
+                if (th !== undefined) state.thetaDeg = parseFloat(th);
+                if (phi !== undefined) state.phiDeg = parseFloat(phi);
+                updateEulerZYZ();
+            },
+            setRates(dPsi, dTh, dPhi) {
+                if (dPsi !== undefined) state.dotPsi = parseFloat(dPsi);
+                if (dTh !== undefined) state.dotTheta = parseFloat(dTh);
+                if (dPhi !== undefined) state.dotPhi = parseFloat(dPhi);
+                updateEulerZYZ();
+            },
+            triggerGimbalLock() {
+                state.thetaDeg = 0;
+                updateEulerZYZ();
+            },
+            reset() {
+                state.psiDeg = 30;
+                state.thetaDeg = 45;
+                state.phiDeg = 60;
+                updateEulerZYZ();
+            }
+        };
     }
+
 };
+
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = Simulations;

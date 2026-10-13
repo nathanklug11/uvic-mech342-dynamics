@@ -292,7 +292,297 @@ const QuizBank = [
         explanation: "Lecture #0 Slide 4 & Ginsberg §1.1.3: Vectors have magnitude and direction. In moving coordinate systems, the unit vectors change direction over time: $\\dot{\\vec{i}} = \\vec{\\omega} \\times \\vec{i}$. Applying product rule yields both relative observed rate and transport rate!",
         hint: "Both the coordinates $(x, y)$ and the unit vectors $(\\vec{i}, \\vec{j})$ are functions of time."
     }
+,
+    {
+        id: "q19",
+        lecture: 4,
+        bloomLevel: "Remember",
+        question: "In Cylindrical coordinates $(R, \\theta, z)$, what is the scale factor $h_\\theta$ corresponding to the azimuth coordinate $\\theta$?",
+        options: [
+            "$h_\\theta = 1$",
+            "$h_\\theta = R$",
+            "$h_\\theta = R\\sin\\theta$",
+            "$h_\\theta = R^2$"
+        ],
+        correctIndex: 1,
+        explanation: "Lecture #4 Slide 4: An infinitesimal angular displacement $d\\theta$ corresponds to an arc length $ds_\\theta = R d\\theta$. Therefore, the scale factor is $h_\\theta = |\\frac{\\partial\\vec{r}}{\\partial\\theta}| = R$.",
+        hint: "Arc length on a circle is radius times angle in radians."
+    },
+
+    {
+        id: "q20",
+        lecture: 4,
+        bloomLevel: "Understand",
+        question: "In Cylindrical coordinates, what is the physical origin of the factor of 2 in the <strong>Coriolis acceleration</strong> term ($2\\dot{R}\\dot{\\theta}$)?",
+        options: [
+            "It is an empirical correction factor from wind tunnel tests.",
+            "It is the sum of two equal physical effects: (1) the rotating direction of the radial velocity vector $\\dot{R}\\dot{\\vec{e}}_R = \\dot{R}\\dot{\\theta}\\vec{e}_\\theta$, and (2) the changing radius $R$ altering the tangential speed $\\frac{d}{dt}(R\\dot{\\theta}) = \\dot{R}\\dot{\\theta}\\vec{e}_\\theta$.",
+            "It comes from the square of the angular velocity.",
+            "It is because the body has two rotational degrees of freedom."
+        ],
+        correctIndex: 1,
+        explanation: "Lecture #4 Slide 8: The product rule $\\frac{d}{dt}(\\dot{R}\\vec{e}_R + R\\dot{\\theta}\\vec{e}_\\theta)$ produces $\\dot{R}\\dot{\\vec{e}}_R = \\dot{R}\\dot{\\theta}\\vec{e}_\\theta$ and $\\frac{dR}{dt}\\dot{\\theta}\\vec{e}_\\theta = \\dot{R}\\dot{\\theta}\\vec{e}_\\theta$. Summing them yields exactly $2\\dot{R}\\dot{\\theta}$!",
+        hint: "Apply the product rule to both the radial component $\\dot{R}\\vec{e}_R$ and tangential component $R\\dot{\\theta}\\vec{e}_\\theta$."
+    },
+
+    {
+        id: "q21",
+        lecture: 4,
+        bloomLevel: "Apply",
+        question: "A robotic collar slides outward along a rotating arm at $\\dot{R} = 2.0\\text{ m/s}$ when $R = 3.0\\text{ m}$. The arm rotates at a constant rate $\\dot{\\theta} = 4.0\\text{ rad/s}$ ($\\ddot{\\theta} = 0$). What is the tangential acceleration component $a_\\theta$?",
+        options: [
+            "$a_\\theta = 0\\text{ m/s}^2$",
+            "$a_\\theta = 8.0\\text{ m/s}^2$",
+            "$a_\\theta = 16.0\\text{ m/s}^2$",
+            "$a_\\theta = 48.0\\text{ m/s}^2$"
+        ],
+        correctIndex: 2,
+        explanation: "In cylindrical coordinates, $a_\\theta = R\\ddot{\\theta} + 2\\dot{R}\\dot{\\theta}$. Since $\\ddot{\\theta} = 0$, $a_\\theta = 2(2.0)(4.0) = 16.0\\text{ m/s}^2$!",
+        hint: "Don't forget the factor of 2 in Coriolis: $2\\dot{R}\\dot{\\theta}$."
+    },
+
+    {
+        id: "q22",
+        lecture: 4,
+        bloomLevel: "Analyze",
+        question: "In Jerry Ginsberg's Spherical coordinates $(r, \\phi, \\theta)$, where $\\phi$ is colatitude from vertical $+Z$ and $\\theta$ is azimuth, what is the scale factor $h_\\theta$?",
+        options: [
+            "$h_\\theta = r$",
+            "$h_\\theta = r\\cos\\phi$",
+            "$h_\\theta = r\\sin\\phi$",
+            "$h_\\theta = \\sin\\phi\\cos\\theta$"
+        ],
+        correctIndex: 2,
+        explanation: "Lecture #4 Slide 20 & Ginsberg §2.2.2: The horizontal radius from the vertical axis is $R = r\\sin\\phi$. The horizontal arc length for an increment $d\\theta$ is $ds_\\theta = (r\\sin\\phi)d\\theta$, so $h_\\theta = r\\sin\\phi$!",
+        hint: "Project radius $r$ onto the horizontal $XY$-plane."
+    },
+
+    {
+        id: "q23",
+        lecture: 5,
+        bloomLevel: "Remember",
+        question: "In Frenet-Serret path variables $(\\vec{e}_t, \\vec{e}_n, \\vec{e}_b)$, what is the component of acceleration along the <strong>binormal axis</strong> $\\vec{e}_b$?",
+        options: [
+            "Strictly zero ($a_b \\equiv 0$)",
+            "$a_b = v^2/\\rho$",
+            "$a_b = \\dot{v}$",
+            "$a_b = \\tau v$ (where $\\tau$ is torsion)"
+        ],
+        correctIndex: 0,
+        explanation: "Lecture #5 Slide 13 & Ginsberg Eq. (2.3.11): Acceleration is $\\vec{a} = \\dot{v}\\vec{e}_t + \\frac{v^2}{\\rho}\\vec{e}_n + 0\\vec{e}_b$. The binormal acceleration is IDENTICALLY ZERO. Acceleration lies entirely in the osculating plane!",
+        hint: "The binormal vector is perpendicular to the osculating plane."
+    },
+
+    {
+        id: "q24",
+        lecture: 5,
+        bloomLevel: "Understand",
+        question: "In 3D particle kinematics along a curve, which geometric plane contains <strong>both</strong> the instantaneous velocity vector $\\vec{v}$ and acceleration vector $\\vec{a}$?",
+        options: [
+            "The Normal plane (spanned by $\\vec{e}_n$ and $\\vec{e}_b$)",
+            "The Rectifying plane (spanned by $\\vec{e}_t$ and $\\vec{e}_b$)",
+            "The Osculating plane (spanned by $\\vec{e}_t$ and $\\vec{e}_n$)",
+            "The horizontal $XY$ Cartesian plane"
+        ],
+        correctIndex: 2,
+        explanation: "Lecture #5 Slide 6: The osculating plane is defined by the unit tangent $\\vec{e}_t$ and principal normal $\\vec{e}_n$. Since $\\vec{v} = v\\vec{e}_t$ and $\\vec{a} = \\dot{v}\\vec{e}_t + (v^2/\\rho)\\vec{e}_n$, both vectors lie strictly inside the osculating plane!",
+        hint: "Latin 'osculari' means 'to kiss' — the plane that kisses the curve."
+    },
+
+    {
+        id: "q25",
+        lecture: 5,
+        bloomLevel: "Apply",
+        question: "What is the universal master formula for the <strong>radius of curvature</strong> $\\rho$ of an arbitrary 3D trajectory in terms of velocity $\\vec{v}$ and acceleration $\\vec{a}$?",
+        options: [
+            "$\\rho = \\frac{|\\vec{v}|^2}{|\\vec{a}|}$",
+            "$\\rho = \\frac{|\\vec{v}|^3}{|\\vec{v} \\times \\vec{a}|}$",
+            "$\\rho = \\frac{|\\vec{v} \\times \\vec{a}|}{|\\vec{v}|^2}$",
+            "$\\rho = \\frac{|\\vec{a}|^2}{|\\vec{v}|^3}$"
+        ],
+        correctIndex: 1,
+        explanation: "Lecture #5 Slide 12: $\\vec{v}\\times\\vec{a} = (v\\vec{e}_t)\\times(\\dot{v}\\vec{e}_t + \\frac{v^2}{\\rho}\\vec{e}_n) = \\frac{v^3}{\\rho}\\vec{e}_b$. Taking magnitudes gives $|\\vec{v}\\times\\vec{a}| = \\frac{v^3}{\\rho} \\implies \\rho = \\frac{|\\vec{v}|^3}{|\\vec{v}\\times\\vec{a}|}$!",
+        hint: "Check dimensional units: m³/s³ divided by m²/s³ gives meters."
+    },
+
+    {
+        id: "q26",
+        lecture: 5,
+        bloomLevel: "Analyze",
+        question: "A test car enters a curved track with radius of curvature $\\rho = 200\\text{ m}$ at a constant speed of $v = 30\\text{ m/s}$. What is its tangential acceleration $\\dot{v}$ and total acceleration magnitude $|\\vec{a}|$?",
+        options: [
+            "$\\dot{v} = 0\\text{ m/s}^2, |\\vec{a}| = 0\\text{ m/s}^2$",
+            "$\\dot{v} = 4.5\\text{ m/s}^2, |\\vec{a}| = 4.5\\text{ m/s}^2$",
+            "$\\dot{v} = 0\\text{ m/s}^2, |\\vec{a}| = 4.5\\text{ m/s}^2$",
+            "$\\dot{v} = 9.0\\text{ m/s}^2, |\\vec{a}| = 9.0\\text{ m/s}^2$"
+        ],
+        correctIndex: 2,
+        explanation: "Because speed is constant, $\\dot{v} = 0$. However, because the car is turning, it has normal acceleration $a_n = \\frac{v^2}{\\rho} = \\frac{30^2}{200} = \\frac{900}{200} = 4.5\\text{ m/s}^2$. Total acceleration $|\\vec{a}| = \\sqrt{0^2 + 4.5^2} = 4.5\\text{ m/s}^2$!",
+        hint: "Constant speed means $\\dot{v} = 0$, but changing direction requires normal acceleration."
+    },
+
+    {
+        id: "q27",
+        lecture: 6,
+        bloomLevel: "Remember",
+        question: "What is <strong>Poisson's Kinematic Relation</strong> for the time derivative of a moving unit basis vector $\\vec{e}$ in a frame with angular velocity $\\vec{\\omega}$?",
+        options: [
+            "$\\dot{\\vec{e}} = \\vec{\\omega} \\cdot \\vec{e}$",
+            "$\\dot{\\vec{e}} = \\vec{\\omega} \\times \\vec{e}$",
+            "$\\dot{\\vec{e}} = |\\vec{\\omega}|\\vec{e}$",
+            "$\\dot{\\vec{e}} = \\vec{\\alpha} \\times \\vec{e}$"
+        ],
+        correctIndex: 1,
+        explanation: "Lecture #6 Slide 8 & Ginsberg Eq. (3.2.14): Since $|\\vec{e}| = 1$ is constant, $\\vec{e} \\cdot \\dot{\\vec{e}} = 0$. The velocity of the tip of the unit vector due to rigid rotation is $\\dot{\\vec{e}} = \\vec{\\omega} \\times \\vec{e}$!",
+        hint: "The tip of the unit vector sweeps an arc perpendicular to both $\\vec{\\omega}$ and $\\vec{e}$."
+    },
+
+    {
+        id: "q28",
+        lecture: 6,
+        bloomLevel: "Understand",
+        question: "Why do <strong>infinitesimal rotations</strong> commute ($d\\vec{\\theta}_1 + d\\vec{\\theta}_2 = d\\vec{\\theta}_2 + d\\vec{\\theta}_1$), allowing angular velocity to be a vector, even though finite rotations do NOT commute?",
+        options: [
+            "Because higher-order terms $\\mathcal{O}(d\\theta^2)$ vanish in the limit $dt \\to 0$, leaving linear matrix addition $[I] + [d\\tilde{\\theta}_1] + [d\\tilde{\\theta}_2]$ which is commutative.",
+            "Because cross products are commutative.",
+            "Because all matrices commute when their determinants are 1.",
+            "Because rigid bodies cannot rotate by finite angles in 3D space."
+        ],
+        correctIndex: 0,
+        explanation: "Lecture #6 Slide 7 & Ginsberg §3.2.2: Finite rotations differ by non-zero commutator $[R_1][R_2] - [R_2][R_1] \\neq 0$. But expanding for infinitesimal angles yields $[R_1][R_2] - [R_2][R_1] = \\mathcal{O}(d\\theta^2) \\to 0$. Dividing by $dt$ gives the commutative vector $\\vec{\\omega} = \\dot{\\vec{\\theta}}$!",
+        hint: "Think about the Taylor series expansion of $\\cos(d\\theta) \\approx 1$ and $\\sin(d\\theta) \\approx d\\theta$."
+    },
+
+    {
+        id: "q29",
+        lecture: 6,
+        bloomLevel: "Apply",
+        question: "A robotic turntable rotates about vertical fixed axis $Z$ at $\\vec{\\omega} = 10\\vec{K}\\text{ rad/s}$. An arm carries a physical vector $\\vec{A} = 2\\vec{i}\\text{ m}$ extending horizontally along the arm. What is the <strong>transport rate of change</strong> $\\vec{\\omega} \\times \\vec{A}$?",
+        options: [
+            "$20\\vec{i}\\text{ m/s}$",
+            "$20\\vec{j}\\text{ m/s}$",
+            "$-20\\vec{j}\\text{ m/s}$",
+            "$0\\text{ m/s}$"
+        ],
+        correctIndex: 1,
+        explanation: "By the right-hand cyclic cross product rule: $(10\\vec{K}) \\times (2\\vec{i}) = 20(\\vec{k} \\times \\vec{i}) = 20\\vec{j}\\text{ m/s}$!",
+        hint: "In a right-handed system, $\\vec{k} \\times \\vec{i} = +\\vec{j}$."
+    },
+
+    {
+        id: "q30",
+        lecture: 6,
+        bloomLevel: "Evaluate",
+        question: "Why is the time derivative of the angular velocity vector $\\vec{\\omega}$ <strong>identically the same</strong> whether taken with respect to the fixed frame $XYZ$ or the rotating frame $xyz$ ($\\vec{\\alpha} = (\\frac{d\\vec{\\omega}}{dt})_{XYZ} = (\\frac{d\\vec{\\omega}}{dt})_{xyz}$)?",
+        options: [
+            "Because the angular velocity vector never rotates.",
+            "Because the Transport Theorem cross product term $\\vec{\\omega} \\times \\vec{\\omega} \\equiv \\vec{0}$, so the transport correction vanishes identically!",
+            "Because only unit vectors have non-zero transport terms.",
+            "Because angular acceleration is a scalar quantity."
+        ],
+        correctIndex: 1,
+        explanation: "Lecture #6 Slide 16 & Ginsberg §3.3.2: Applying the Transport Theorem: $(\\frac{d\\vec{\\omega}}{dt})_{XYZ} = (\\frac{d\\vec{\\omega}}{dt})_{xyz} + \\vec{\\omega}\\times\\vec{\\omega}$. Since any vector crossed with itself is zero ($\\vec{\\omega}\\times\\vec{\\omega} = \\vec{0}$), both derivatives are exactly identical!",
+        hint: "What is $\\vec{V} \\times \\vec{V}$ for any 3D vector?"
+    },
+
+    {
+        id: "q31",
+        lecture: 7,
+        bloomLevel: "Remember",
+        question: "What is Jerry Ginsberg's canonical 3-step sequence defining the <strong>Eulerian Angles</strong> in Chapter 4?",
+        options: [
+            "Precession $\\psi$ about $Z$, Pitch $\\theta$ about $Y$, Roll $\\phi$ about $X$ (Z-Y-X)",
+            "Precession $\\psi$ about fixed $Z$, Nutation $\\theta$ about intermediate $y'$, Spin $\\phi$ about body $z''$ (Z-Y-Z)",
+            "Rotation about $X$, then $Y$, then $Z$ (X-Y-Z)",
+            "Rotation about $Z$, then $X'$, then $Z''$ (Classical Z-X-Z)"
+        ],
+        correctIndex: 1,
+        explanation: "Lecture #7 Slide 1 & Ginsberg §4.2: Ginsberg defines the Eulerian Angles as the 3-step body-fixed Z-Y-Z sequence: (1) Precession $\\psi$ about $Z$, (2) Nutation $\\theta$ about intermediate $y'$, (3) Spin $\\phi$ about body symmetry axis $z''$!",
+        hint: "Notice the intermediate axis is $y'$, not $x'$ or $z'$."
+    },
+
+    {
+        id: "q32",
+        lecture: 7,
+        bloomLevel: "Understand",
+        question: "In Ginsberg's Z-Y-Z Eulerian angle sequence, at what orientation does <strong>Gimbal Lock singularity</strong> occur?",
+        options: [
+            "When $\\theta = 90^\\circ$ ($\\cos\\theta = 0$)",
+            "When $\\theta = 0^\\circ$ or $180^\\circ$ ($\\sin\\theta = 0$)",
+            "When $\\psi = 45^\\circ$",
+            "When all three angles are equal"
+        ],
+        correctIndex: 1,
+        explanation: "Lecture #7 Slide 10: In Ginsberg's Z-Y-Z convention, when nutation $\\theta = 0$ or $\\pi$, the precession axis $Z$ and the spin axis $z''$ become completely collinear! Precession and spin rotate about the exact same physical axis, causing the loss of 1 rotational degree of freedom.",
+        hint: "When nutation is zero, the top of the gyroscope stands straight up."
+    },
+
+    {
+        id: "q33",
+        lecture: 7,
+        bloomLevel: "Apply",
+        question: "In Ginsberg's Z-Y-Z Eulerian angle representation, what is the body-fixed angular velocity component along the rotor symmetry axis $\\vec{k}$ ($\\omega_z$)?",
+        options: [
+            "$\\omega_z = \\dot{\\phi}$",
+            "$\\omega_z = \\dot{\\psi}\\cos\\theta + \\dot{\\phi}$",
+            "$\\omega_z = \\dot{\\psi}\\sin\\theta + \\dot{\\theta}$",
+            "$\\omega_z = \\dot{\\psi} + \\dot{\\theta} + \\dot{\\phi}$"
+        ],
+        correctIndex: 1,
+        explanation: "Lecture #7 Slide 5 & Ginsberg Eq. (4.2.12): Precession $\\dot{\\psi}\\vec{K}$ projects onto the body axis $\\vec{k}$ as $\\dot{\\psi}\\cos\\theta$. Adding the rotor spin $\\dot{\\phi}$ along $\\vec{k}$ gives $\\omega_z = \\dot{\\psi}\\cos\\theta + \\dot{\\phi}$!",
+        hint: "Project the vertical axis $\\vec{K}$ onto the tilted axis $\\vec{k}$."
+    },
+
+    {
+        id: "q34",
+        lecture: 1,
+        bloomLevel: "Apply",
+        question: "In Assignment 1 Question 1, British Columbia engineers use Buckets (1 bk = 15 kip), Trips (1 tr = 40 m), and hits (1 ht = 3 s). What is the acceleration due to gravity $g = 9.81\\text{ m/s}^2$ in this wacky unit system?",
+        options: [
+            "$g = 9.81\\text{ tr/ht}^2$",
+            "$g = 2.207\\text{ tr/ht}^2$",
+            "$g = 43.60\\text{ tr/ht}^2$",
+            "$g = 0.245\\text{ tr/ht}^2$"
+        ],
+        correctIndex: 1,
+        explanation: "Assignment 1 Solutions Q1: $1\\text{ m/s}^2 = (1/40\\text{ tr}) \\times (3^2\\text{ s}^2 / 1\\text{ ht}^2) = \\frac{9}{40}\\text{ tr/ht}^2$. Multiplying $9.81 \\times \\frac{9}{40} = 2.207\\text{ tr/ht}^2$!",
+        hint: "Multiply by $(3^2) / 40 = 9/40$."
+    },
+
+    {
+        id: "q35",
+        lecture: 1,
+        bloomLevel: "Apply",
+        question: "In Tutorial 1 Problem 1, you find the moment vector of a cable force about corner A is $\\vec{M}_A = 7749\\vec{i} - 12034\\vec{k}\\text{ N}\\cdot\\text{m}$. The shaft unit vector is $\\vec{e}_{shaft} = \\cos 75^\\circ\\vec{j} + \\sin 75^\\circ\\vec{k}$. What is the moment about the shaft axis?",
+        options: [
+            "$M_{shaft} = 7749\\text{ N}\\cdot\\text{m}$",
+            "$M_{shaft} = -12034\\text{ N}\\cdot\\text{m}$",
+            "$M_{shaft} = -11624\\text{ N}\\cdot\\text{m}$",
+            "$M_{shaft} = 0\\text{ N}\\cdot\\text{m}$"
+        ],
+        correctIndex: 2,
+        explanation: "Tutorial 1 Solutions Q1: Project the moment vector onto the shaft unit vector via dot product: $M_{shaft} = \\vec{M}_A \\cdot \\vec{e}_{shaft} = (7749\\vec{i} - 12034\\vec{k}) \\cdot (0\\vec{i} + \\cos 75^\\circ\\vec{j} + \\sin 75^\\circ\\vec{k}) = -12034\\sin 75^\\circ = -11624\\text{ N}\\cdot\\text{m}$!",
+        hint: "Take the dot product of $\\vec{M}_A$ with $\\vec{e}_{shaft}$."
+    },
+
+    {
+        id: "q36",
+        lecture: 4,
+        bloomLevel: "Analyze",
+        question: "In Tutorial 3 Problem 1, bar AB of length $L$ slides on a rising table ($z = L\\cos\\theta$) translating upward at speed $u$ ($\\dot{z} = -u$). What is the angular rate $\\dot{\\theta}$?",
+        options: [
+            "$\\dot{\\theta} = \\frac{u}{L\\cos\\theta}$",
+            "$\\dot{\\theta} = \\frac{u}{L\\sin\\theta}$",
+            "$\\dot{\\theta} = -\\frac{u}{L}$",
+            "$\\dot{\\theta} = \\frac{u^2}{L^2\\sin\\theta}$"
+        ],
+        correctIndex: 1,
+        explanation: "Tutorial 3 Solutions Q1: Differentiating $z = L\\cos\\theta$ yields $\\dot{z} = -L\\dot{\\theta}\\sin\\theta$. Since the table moves upward, $\\dot{z} = -u$. Equating $-u = -L\\dot{\\theta}\\sin\\theta \\implies \\dot{\\theta} = \\frac{u}{L\\sin\\theta}$!",
+        hint: "Differentiate $L\\cos\\theta$ using the chain rule w.r.t time."
+    }
+
 ];
+
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = QuizBank;

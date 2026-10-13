@@ -1154,3 +1154,53 @@ body {
         page-break-inside: avoid;
     }
 }
+
+/* -------------------------------------------------------------
+ * EXAM & TUTORIAL MASTER HUB STYLING
+ * ------------------------------------------------------------- */
+.exam-subnav-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.exam-filter-btn {
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.exam-filter-btn.active {
+    background: var(--uvic-blue);
+    color: #ffffff;
+    border-color: var(--uvic-blue);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+.exam-solution-step {
+    transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.exam-solution-step:hover {
+    background-color: rgba(30, 41, 59, 0.7) !important;
+    transform: translateX(4px);
+}
+
+.solver-widget {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    transition: border-color 0.2s;
+}
+
+.solver-widget:hover {
+    border-color: var(--primary) !important;
+}
+
+.solver-widget input:focus {
+    outline: none;
+    border-color: var(--uvic-blue) !important;
+    box-shadow: 0 0 5px rgba(56, 189, 248, 0.5);
+}
+
